@@ -1,4 +1,4 @@
-module time-tracker
+module chronly
 
 go 1.25.0
 
