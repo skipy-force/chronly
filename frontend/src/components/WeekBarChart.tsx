@@ -1,4 +1,5 @@
 import { memo } from 'react'
+import { motion } from 'framer-motion'
 
 interface WeekBarChartProps {
   minutesByDay: number[]
@@ -14,9 +15,11 @@ export const WeekBarChart = memo(function WeekBarChart({ minutesByDay, labels, a
       {minutesByDay.map((minutes, i) => (
         <div key={i} className="flex flex-1 flex-col items-center gap-2">
           <div className="flex h-24 w-full items-end overflow-hidden rounded-md bg-surface-container-high">
-            <div
+            <motion.div
               className={`w-full rounded-md ${i === activeIndex ? 'bg-primary' : 'bg-outline/60'}`}
-              style={{ height: `${Math.max(4, (minutes / max) * 100)}%` }}
+              initial={{ height: '0%' }}
+              animate={{ height: `${Math.max(4, (minutes / max) * 100)}%` }}
+              transition={{ type: 'spring', bounce: 0.3, duration: 0.6, delay: i * 0.04 }}
             />
           </div>
           <span className={`text-xs ${i === activeIndex ? 'text-on-surface' : 'text-on-surface-variant'}`}>

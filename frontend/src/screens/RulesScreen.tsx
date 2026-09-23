@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { ChevronDown } from 'lucide-react'
 import { api } from '../lib/api'
 import { queryKeys } from '../lib/queryClient'
 import { RulesGraph } from '../components/RulesGraph'
+import { Select } from '../components/Select'
 
 export function RulesScreen() {
   const queryClient = useQueryClient()
@@ -51,26 +51,11 @@ export function RulesScreen() {
         </div>
         <div>
           <label className="text-xs text-on-surface-variant">Project</label>
-          <div className="relative">
-            <select
-              value={projectId ?? ''}
-              onChange={(e) => setProjectId(Number(e.target.value))}
-              className="appearance-none rounded-pill bg-surface-container-high py-1.5 pl-3 pr-8 text-sm outline-none focus:ring-1 focus:ring-primary"
-            >
-              <option value="" disabled>
-                Select
-              </option>
-              {projects.map((p) => (
-                <option key={p.ID} value={p.ID}>
-                  {p.Name}
-                </option>
-              ))}
-            </select>
-            <ChevronDown
-              size={14}
-              className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-on-surface-variant"
-            />
-          </div>
+          <Select
+            value={projectId !== null ? String(projectId) : null}
+            onChange={(v) => setProjectId(Number(v))}
+            options={projects.map((p) => ({ value: String(p.ID), label: p.Name }))}
+          />
         </div>
         <div>
           <label className="text-xs text-on-surface-variant">Priority</label>

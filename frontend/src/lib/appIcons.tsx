@@ -1,3 +1,4 @@
+import { useQuery } from '@tanstack/react-query'
 import {
   AppWindow,
   Code2,
@@ -13,6 +14,7 @@ import {
   Video,
   type LucideIcon,
 } from 'lucide-react'
+import { api } from './api'
 
 interface AppIconMatch {
   keywords: string[]
@@ -57,6 +59,25 @@ export function resolveAppIcon(appName: string): { Icon: LucideIcon; className: 
 
 export function AppIconBadge({ appName, size = 32 }: { appName: string; size?: number }) {
   const { Icon, className } = resolveAppIcon(appName)
+  const { data: iconDataUri } = useQuery({
+    queryKey: ['appIcon', appName],
+    queryFn: () => api.getAppIcon(appName),
+    enabled: !!appName,
+    staleTime: Infinity,
+    gcTime: Infinity,
+  })
+
+  if (iconDataUri) {
+    return (
+      <img
+        src={iconDataUri}
+        alt=""
+        className="shrink-0 rounded-full object-contain"
+        style={{ width: size, height: size }}
+      />
+    )
+  }
+
   return (
     <div
       className={`flex shrink-0 items-center justify-center rounded-full ${className}`}

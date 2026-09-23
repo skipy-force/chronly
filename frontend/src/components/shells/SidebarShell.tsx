@@ -15,7 +15,7 @@ export function SidebarShell({ children }: { children: ReactNode }) {
   const { activeScreen, setActiveScreen } = useUiStore()
   return (
     <div className="flex h-screen bg-surface text-on-surface">
-      <nav className="flex w-44 flex-col gap-1 border-r border-outline p-3">
+      <nav className="flex w-44 flex-col gap-1 bg-surface-container/40 p-3">
         <div className="mb-3 flex items-center gap-2 px-2">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-surface-container-high text-on-surface-variant">
             <User size={16} />

@@ -35,10 +35,11 @@ type App struct {
 	idleDetectorTier string
 	themeWatcher     *fsnotify.Watcher
 	dbPath           string
+	icons            *iconResolver
 }
 
 func NewApp() *App {
-	return &App{}
+	return &App{icons: newIconResolver()}
 }
 
 func (a *App) startup(ctx context.Context) {
@@ -221,6 +222,10 @@ func (a *App) GetAppVersion() string {
 
 func (a *App) OpenDataFolder() error {
 	return openFileManager(filepath.Dir(a.dbPath))
+}
+
+func (a *App) GetAppIcon(appName string) string {
+	return a.icons.resolve(appName)
 }
 
 type noopIdleDetector struct{}

@@ -2,7 +2,8 @@ import { memo } from 'react'
 
 interface MonthHeatmapProps {
   monthLabel: string
-  weeks: { key: string; minutes: number; inMonth: boolean; isToday: boolean }[][]
+  weeks: { key: string; minutes: number; inMonth: boolean; isToday: boolean; isSelected?: boolean }[][]
+  onSelectDay?: (key: string) => void
 }
 
 function intensityClass(minutes: number, max: number): string {
@@ -14,7 +15,7 @@ function intensityClass(minutes: number, max: number): string {
   return 'bg-primary/20'
 }
 
-export const MonthHeatmap = memo(function MonthHeatmap({ monthLabel, weeks }: MonthHeatmapProps) {
+export const MonthHeatmap = memo(function MonthHeatmap({ monthLabel, weeks, onSelectDay }: MonthHeatmapProps) {
   const max = Math.max(1, ...weeks.flat().map((d) => d.minutes))
 
   return (
@@ -24,11 +25,16 @@ export const MonthHeatmap = memo(function MonthHeatmap({ monthLabel, weeks }: Mo
         {weeks.map((week, wi) => (
           <div key={wi} className="flex gap-1.5">
             {week.map((day) => (
-              <div
+              <button
                 key={day.key}
+                type="button"
                 title={day.key}
+                disabled={!day.inMonth || !onSelectDay}
+                onClick={() => onSelectDay?.(day.key)}
                 className={`h-5 flex-1 rounded ${day.inMonth ? intensityClass(day.minutes, max) : 'bg-transparent'} ${
                   day.isToday ? 'ring-1 ring-primary' : ''
+                } ${day.isSelected ? 'outline outline-2 outline-on-surface' : ''} ${
+                  day.inMonth && onSelectDay ? 'cursor-pointer hover:brightness-125' : ''
                 }`}
               />
             ))}

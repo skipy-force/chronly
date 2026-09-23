@@ -22,6 +22,10 @@ export function DeleteAssignmentRule(arg1) {
   return window['go']['main']['App']['DeleteAssignmentRule'](arg1);
 }
 
+export function GetAppIcon(arg1) {
+  return window['go']['main']['App']['GetAppIcon'](arg1);
+}
+
 export function GetAppState() {
   return window['go']['main']['App']['GetAppState']();
 }

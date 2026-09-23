@@ -47,6 +47,8 @@ export const api = {
   getDBPath: () => App.GetDBPath(),
   getAppVersion: () => App.GetAppVersion(),
   openDataFolder: () => App.OpenDataFolder(),
+
+  getAppIcon: (appName: string) => App.GetAppIcon(appName),
 }
 
 export function useQueryEvents() {

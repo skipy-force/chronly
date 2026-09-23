@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { motion } from 'framer-motion'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { api } from '../lib/api'
@@ -77,16 +78,23 @@ export function TimelineScreen() {
             ? "Every card below is one tracked activity. Tap a card to assign it to a project — a red card isn't assigned yet."
             : 'Apps you used today, most recently active first.'}
         </p>
-        <div className="flex shrink-0 gap-1">
+        <div className="flex shrink-0 gap-1 rounded-pill bg-surface-container p-1">
           {(['time', 'app'] as TimelineView[]).map((v) => (
             <button
               key={v}
               onClick={() => setView(v)}
-              className={`rounded-pill px-3 py-1 text-xs ${
-                view === v ? 'bg-primary text-surface' : 'bg-surface-container text-on-surface-variant'
+              className={`relative rounded-pill px-3 py-1 text-xs ${
+                view === v ? 'text-surface' : 'text-on-surface-variant'
               }`}
             >
-              {v === 'time' ? 'By time' : 'By app'}
+              {view === v && (
+                <motion.div
+                  layoutId="timeline-view-pill"
+                  className="absolute inset-0 rounded-pill bg-primary"
+                  transition={{ type: 'spring', bounce: 0.25, duration: 0.4 }}
+                />
+              )}
+              <span className="relative">{v === 'time' ? 'By time' : 'By app'}</span>
             </button>
           ))}
         </div>

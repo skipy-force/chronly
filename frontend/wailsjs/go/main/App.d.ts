@@ -13,6 +13,8 @@ export function CreateTask(arg1:tracker.Task):Promise<number>;
 
 export function DeleteAssignmentRule(arg1:number):Promise<void>;
 
+export function GetAppIcon(arg1:string):Promise<string>;
+
 export function GetAppState():Promise<tracker.AppState>;
 
 export function GetAppVersion():Promise<string>;
