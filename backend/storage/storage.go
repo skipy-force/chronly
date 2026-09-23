@@ -65,7 +65,7 @@ CREATE TABLE IF NOT EXISTS app_state (
 INSERT OR IGNORE INTO app_state (id, tracking_paused) VALUES (1, 0);`
 
 func Open(path string) (*Store, error) {
-	db, err := sql.Open("sqlite", path)
+	db, err := sql.Open("sqlite", path+"?_journal_mode=WAL&_busy_timeout=5000")
 	if err != nil {
 		return nil, err
 	}

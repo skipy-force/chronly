@@ -1,6 +1,13 @@
 package storage
 
-import "testing"
+import (
+	"fmt"
+	"path/filepath"
+	"sync"
+	"testing"
+
+	"chronly/backend/tracker"
+)
 
 func TestOpenCrteatesSchema(t *testing.T) {
 	store, err := Open(":memory:")
@@ -24,5 +31,38 @@ func TestOpenCrteatesSchema(t *testing.T) {
 			t.Errorf("table %q not found: %v", table, err)
 
 		}
+	}
+}
+
+func TestOpen_HandlesConcurrentAccessWithoutLockErrors(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "concurrent.db")
+	s, err := Open(path)
+	if err != nil {
+		t.Fatalf("Open: %v", err)
+	}
+	defer s.Close()
+
+	var wg sync.WaitGroup
+	errCh := make(chan error, 40)
+	for i := 0; i < 20; i++ {
+		wg.Add(2)
+		go func(n int) {
+			defer wg.Done()
+			if _, err := s.CreateProject(tracker.Project{Name: fmt.Sprintf("p%d", n)}); err != nil {
+				errCh <- err
+			}
+		}(i)
+		go func() {
+			defer wg.Done()
+			if _, err := s.GetAppState(); err != nil {
+				errCh <- err
+			}
+		}()
+	}
+	wg.Wait()
+	close(errCh)
+
+	for err := range errCh {
+		t.Errorf("concurrent access error: %v", err)
 	}
 }
