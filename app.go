@@ -21,10 +21,11 @@ const (
 )
 
 type App struct {
-	ctx    context.Context
-	store  *storage.Store
-	cancel context.CancelFunc
-	tray   *Tray
+	ctx              context.Context
+	store            *storage.Store
+	cancel           context.CancelFunc
+	tray             *Tray
+	idleDetectorTier string
 }
 
 func NewApp() *App {
@@ -85,12 +86,14 @@ func (a *App) beforeClose(ctx context.Context) bool {
 
 func (a *App) resolveIdleDetector(ctx context.Context) (tracker.IdleDetector, func() error) {
 	if detector, run, err := tracker.NewWaylandIdleDetector(ctx, waylandIdleMillis); err == nil {
+		a.idleDetectorTier = "wayland"
 		return detector, run
 	} else {
 		log.Printf("wayland idle detector unavailable: %v", err)
 	}
 
 	if detector, run, err := tracker.NewEvdevIdleDetector(ctx); err == nil {
+		a.idleDetectorTier = "evdev"
 		return detector, run
 	} else {
 		log.Printf("evdev idle detector unavailable: %v", err)
@@ -108,7 +111,12 @@ func (a *App) resolveIdleDetector(ctx context.Context) (tracker.IdleDetector, fu
 		runtime.Quit(a.ctx)
 	}
 
+	a.idleDetectorTier = "none"
 	return noopIdleDetector{}, nil
+}
+
+func (a *App) GetIdleDetectorTier() string {
+	return a.idleDetectorTier
 }
 
 type noopIdleDetector struct{}
