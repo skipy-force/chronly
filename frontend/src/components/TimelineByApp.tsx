@@ -1,5 +1,6 @@
 import type { Block } from '../lib/api'
 import { AppIconBadge } from '../lib/appIcons'
+import { prettyAppName } from '../lib/appNames'
 import { formatHoursMinutes, formatRelativeTime } from '../lib/dates'
 
 interface TimelineByAppProps {
@@ -41,12 +42,12 @@ export function TimelineByApp({ blocks }: TimelineByAppProps) {
   }
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex h-full flex-col gap-2 overflow-y-auto">
       {sorted.map((group) => (
         <div key={group.appName} className="flex items-center gap-4 rounded-lg bg-surface-container p-4">
           <AppIconBadge appName={group.appName} size={40} />
           <div className="min-w-0 flex-1">
-            <p className="truncate text-base font-medium">{group.appName}</p>
+            <p className="truncate text-base font-medium">{prettyAppName(group.appName)}</p>
             <p className="text-sm text-on-surface-variant">last active {formatRelativeTime(group.lastEnd, now)}</p>
           </div>
           <span className="shrink-0 font-mono text-lg font-semibold">{formatHoursMinutes(group.totalMinutes)}</span>

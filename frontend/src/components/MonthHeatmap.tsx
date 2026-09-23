@@ -1,3 +1,5 @@
+import { memo } from 'react'
+
 interface MonthHeatmapProps {
   monthLabel: string
   weeks: { key: string; minutes: number; inMonth: boolean; isToday: boolean }[][]
@@ -12,7 +14,7 @@ function intensityClass(minutes: number, max: number): string {
   return 'bg-primary/20'
 }
 
-export function MonthHeatmap({ monthLabel, weeks }: MonthHeatmapProps) {
+export const MonthHeatmap = memo(function MonthHeatmap({ monthLabel, weeks }: MonthHeatmapProps) {
   const max = Math.max(1, ...weeks.flat().map((d) => d.minutes))
 
   return (
@@ -35,4 +37,4 @@ export function MonthHeatmap({ monthLabel, weeks }: MonthHeatmapProps) {
       </div>
     </div>
   )
-}
+})

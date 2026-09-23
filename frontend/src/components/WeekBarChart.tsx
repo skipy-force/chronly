@@ -1,10 +1,12 @@
+import { memo } from 'react'
+
 interface WeekBarChartProps {
   minutesByDay: number[]
   labels: string[]
   activeIndex: number
 }
 
-export function WeekBarChart({ minutesByDay, labels, activeIndex }: WeekBarChartProps) {
+export const WeekBarChart = memo(function WeekBarChart({ minutesByDay, labels, activeIndex }: WeekBarChartProps) {
   const max = Math.max(1, ...minutesByDay)
 
   return (
@@ -24,4 +26,4 @@ export function WeekBarChart({ minutesByDay, labels, activeIndex }: WeekBarChart
       ))}
     </div>
   )
-}
+})

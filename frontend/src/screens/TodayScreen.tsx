@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { memo, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Pause, Play } from 'lucide-react'
 import { api, type Block } from '../lib/api'
@@ -7,6 +7,7 @@ import { useElapsedSince } from '../lib/useTicker'
 import { WeekBarChart } from '../components/WeekBarChart'
 import { MonthHeatmap } from '../components/MonthHeatmap'
 import { AppBreakdownList } from '../components/AppBreakdownList'
+import { prettyAppName } from '../lib/appNames'
 import { localDateKey, startOfWeek, addDays, startOfMonth, daysInMonth, formatHoursMinutes } from '../lib/dates'
 
 const WEEKDAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
@@ -115,17 +116,13 @@ export function TodayScreen() {
 
   const lastBlock = todayBlocks[todayBlocks.length - 1]
   const tracking = !appState?.TrackingPaused
-  const elapsed = useElapsedSince(tracking && lastBlock ? lastBlock.StartTime : null)
 
   return (
     <div className="flex h-full flex-col gap-4 overflow-y-auto p-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-lg font-semibold">Today</h1>
-          <p className="text-xs text-on-surface-variant">
-            {tracking ? (lastBlock ? lastBlock.AppName : 'No activity yet') : 'Paused'}
-            {tracking && elapsed ? ` · ${elapsed}` : ''}
-          </p>
+          <LiveStatus tracking={tracking} appName={lastBlock?.AppName} startIso={lastBlock?.StartTime} />
         </div>
         <button
           onClick={() => pauseMutation.mutate(!appState?.TrackingPaused)}
@@ -166,3 +163,21 @@ function StatCard({ label, value }: { label: string; value: string }) {
     </div>
   )
 }
+
+const LiveStatus = memo(function LiveStatus({
+  tracking,
+  appName,
+  startIso,
+}: {
+  tracking: boolean
+  appName?: string
+  startIso?: string
+}) {
+  const elapsed = useElapsedSince(tracking && startIso ? startIso : null)
+  return (
+    <p className="text-xs text-on-surface-variant">
+      {tracking ? (appName ? prettyAppName(appName) : 'No activity yet') : 'Paused'}
+      {tracking && elapsed ? ` · ${elapsed}` : ''}
+    </p>
+  )
+})

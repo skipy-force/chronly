@@ -1,5 +1,7 @@
+import { memo } from 'react'
 import { formatHoursMinutes } from '../lib/dates'
 import { AppIconBadge } from '../lib/appIcons'
+import { prettyAppName } from '../lib/appNames'
 
 interface AppBreakdownEntry {
   appName: string
@@ -10,7 +12,7 @@ interface AppBreakdownListProps {
   entries: AppBreakdownEntry[]
 }
 
-export function AppBreakdownList({ entries }: AppBreakdownListProps) {
+export const AppBreakdownList = memo(function AppBreakdownList({ entries }: AppBreakdownListProps) {
   const max = Math.max(1, ...entries.map((e) => e.minutes))
 
   if (entries.length === 0) {
@@ -27,7 +29,7 @@ export function AppBreakdownList({ entries }: AppBreakdownListProps) {
         <div key={entry.appName} className="flex items-center gap-3 rounded-lg bg-surface-container p-3">
           <AppIconBadge appName={entry.appName} />
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium">{entry.appName || 'Unknown'}</p>
+            <p className="truncate text-sm font-medium">{prettyAppName(entry.appName)}</p>
             <div className="mt-1 h-1.5 overflow-hidden rounded-pill bg-surface-container-high">
               <div className="h-full rounded-pill bg-primary" style={{ width: `${(entry.minutes / max) * 100}%` }} />
             </div>
@@ -39,4 +41,4 @@ export function AppBreakdownList({ entries }: AppBreakdownListProps) {
       ))}
     </div>
   )
-}
+})

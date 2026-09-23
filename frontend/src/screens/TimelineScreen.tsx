@@ -7,8 +7,7 @@ import { TimelineList } from '../components/TimelineList'
 import { TimelineByApp } from '../components/TimelineByApp'
 import { DatePicker } from '../components/DatePicker'
 import { localDateKey, formatHoursMinutes } from '../lib/dates'
-
-type View = 'time' | 'app'
+import { useUiStore, type TimelineView } from '../store/uiStore'
 
 function addDays(dateStr: string, delta: number): string {
   const d = new Date(dateStr + 'T00:00:00')
@@ -18,7 +17,7 @@ function addDays(dateStr: string, delta: number): string {
 
 export function TimelineScreen() {
   const [date, setDate] = useState(() => localDateKey(new Date()))
-  const [view, setView] = useState<View>('time')
+  const { timelineView: view, setTimelineView: setView } = useUiStore()
   const queryClient = useQueryClient()
 
   const start = new Date(date + 'T00:00:00').toISOString()
@@ -50,7 +49,7 @@ export function TimelineScreen() {
   )
 
   return (
-    <div className="flex h-full flex-col gap-4 overflow-y-auto p-6">
+    <div className="flex h-full flex-col gap-4 p-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1">
           <button
@@ -79,7 +78,7 @@ export function TimelineScreen() {
             : 'Apps you used today, most recently active first.'}
         </p>
         <div className="flex shrink-0 gap-1">
-          {(['time', 'app'] as View[]).map((v) => (
+          {(['time', 'app'] as TimelineView[]).map((v) => (
             <button
               key={v}
               onClick={() => setView(v)}
@@ -93,11 +92,13 @@ export function TimelineScreen() {
         </div>
       </div>
 
-      {view === 'time' ? (
-        <TimelineList blocks={blocks} onSelect={(index) => setAssigningIndex(index)} />
-      ) : (
-        <TimelineByApp blocks={blocks} />
-      )}
+      <div className="min-h-0 flex-1">
+        {view === 'time' ? (
+          <TimelineList blocks={blocks} onSelect={(index) => setAssigningIndex(index)} />
+        ) : (
+          <TimelineByApp blocks={blocks} />
+        )}
+      </div>
 
       {assigningIndex !== null && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/50">
