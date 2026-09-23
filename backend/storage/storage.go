@@ -64,7 +64,10 @@ CREATE TABLE IF NOT EXISTS app_state (
       tracking_paused INTEGER NOT NULL DEFAULT 0,
       afk_threshold_minutes INTEGER NOT NULL DEFAULT 3
 );
-INSERT OR IGNORE INTO app_state (id, tracking_paused) VALUES (1, 0);`
+INSERT OR IGNORE INTO app_state (id, tracking_paused) VALUES (1, 0);
+
+CREATE INDEX IF NOT EXISTS idx_activity_blocks_start_time ON activity_blocks(start_time);
+CREATE INDEX IF NOT EXISTS idx_tasks_project_id ON tasks(project_id);`
 
 func migrate(db *sql.DB) error {
 	if _, err := db.Exec(`ALTER TABLE app_state ADD COLUMN afk_threshold_minutes INTEGER NOT NULL DEFAULT 3`); err != nil {

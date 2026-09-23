@@ -34,6 +34,22 @@ func TestOpenCrteatesSchema(t *testing.T) {
 	}
 }
 
+func TestOpen_CreatesIndexOnActivityBlocksStartTime(t *testing.T) {
+	store, err := Open(":memory:")
+	if err != nil {
+		t.Fatalf("Open failed: %v", err)
+	}
+	defer store.Close()
+
+	var name string
+	err = store.db.QueryRow(
+		"SELECT name FROM sqlite_master WHERE type='index' AND tbl_name='activity_blocks' AND sql LIKE '%start_time%'",
+	).Scan(&name)
+	if err != nil {
+		t.Fatalf("expected an index on activity_blocks(start_time), got error: %v", err)
+	}
+}
+
 func TestOpen_HandlesConcurrentAccessWithoutLockErrors(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "concurrent.db")
 	s, err := Open(path)
