@@ -1,4 +1,5 @@
 import { ReactNode } from 'react'
+import { motion } from 'framer-motion'
 import { SCREENS, useUiStore } from '../../store/uiStore'
 
 export function SidebarShell({ children }: { children: ReactNode }) {
@@ -10,13 +11,18 @@ export function SidebarShell({ children }: { children: ReactNode }) {
           <button
             key={screen.id}
             onClick={() => setActiveScreen(screen.id)}
-            className={`w-12 rounded-pill py-2 text-xs ${
-              activeScreen === screen.id
-                ? 'bg-primary text-surface'
-                : 'text-on-surface-variant hover:bg-surface-container'
+            className={`relative w-12 rounded-pill py-2 text-xs ${
+              activeScreen === screen.id ? 'text-surface' : 'text-on-surface-variant hover:bg-surface-container'
             }`}
           >
-            {screen.label.slice(0, 2)}
+            {activeScreen === screen.id && (
+              <motion.div
+                layoutId="sidebar-active-pill"
+                className="absolute inset-0 rounded-pill bg-primary"
+                transition={{ type: 'spring', bounce: 0.25, duration: 0.4 }}
+              />
+            )}
+            <span className="relative">{screen.label.slice(0, 2)}</span>
           </button>
         ))}
       </nav>

@@ -18,7 +18,15 @@ function applyThemeCSS(css: string) {
 }
 
 export function installMatugenTheme(): () => void {
-  GetThemeCSS().then(applyThemeCSS).catch(() => {})
-  const unsubscribe = EventsOn('theme:changed', (css: string) => applyThemeCSS(css))
+  GetThemeCSS()
+    .then((css) => {
+      console.log('[theme] GetThemeCSS returned', css.length, 'chars')
+      applyThemeCSS(css)
+    })
+    .catch((err) => console.error('[theme] GetThemeCSS failed:', err))
+  const unsubscribe = EventsOn('theme:changed', (css: string) => {
+    console.log('[theme] theme:changed event,', css.length, 'chars')
+    applyThemeCSS(css)
+  })
   return unsubscribe
 }
