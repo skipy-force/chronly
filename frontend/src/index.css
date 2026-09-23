@@ -107,6 +107,10 @@ body {
   color: var(--color-on-surface);
 }
 
+button:not(:disabled) {
+  cursor: pointer;
+}
+
 * {
   scrollbar-width: thin;
   scrollbar-color: var(--color-outline) transparent;
