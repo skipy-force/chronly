@@ -3,12 +3,13 @@ package main
 import (
 	_ "embed"
 	"fmt"
+	"runtime"
 	"time"
 
 	"chronly/backend/tracker"
 
 	"github.com/getlantern/systray"
-	"github.com/wailsapp/wails/v2/pkg/runtime"
+	wailsruntime "github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 //go:embed build/appicon.png
@@ -33,6 +34,7 @@ func newTray(app *App) *Tray {
 }
 
 func (t *Tray) run() {
+	runtime.LockOSThread()
 	systray.Run(t.onReady, t.onExit)
 }
 
@@ -83,7 +85,7 @@ func (t *Tray) watchPause() {
 func (t *Tray) watchOpen(item *systray.MenuItem) {
 	for range item.ClickedCh {
 		if t.app.ctx != nil {
-			runtime.WindowShow(t.app.ctx)
+			wailsruntime.WindowShow(t.app.ctx)
 		}
 	}
 }
@@ -91,7 +93,7 @@ func (t *Tray) watchOpen(item *systray.MenuItem) {
 func (t *Tray) watchQuit(item *systray.MenuItem) {
 	<-item.ClickedCh
 	if t.app.ctx != nil {
-		runtime.Quit(t.app.ctx)
+		wailsruntime.Quit(t.app.ctx)
 	}
 	systray.Quit()
 }
