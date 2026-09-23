@@ -33,6 +33,8 @@ export const api = {
     App.ListActivityBlocksForRange(start, end) as unknown as Promise<Block[]>,
   updateActivityBlockAssignment: (id: number, taskId: number | null) =>
     App.UpdateActivityBlockAssignment(id, taskId),
+  updateActivityBlockProjectOnly: (id: number, projectId: number) =>
+    App.UpdateActivityBlockProjectOnly(id, projectId),
   splitActivityBlock: (id: number, splitAt: string) => App.SplitActivityBlock(id, splitAt),
 
   listAssignmentRules: () => App.ListAssignmentRules(),
@@ -50,6 +52,8 @@ export const api = {
 
   getAppIcon: (appName: string) => App.GetAppIcon(appName),
   pickAvatar: () => App.PickAvatar(),
+
+  getRecentLogs: (maxLines: number) => App.GetRecentLogs(maxLines),
 }
 
 export function useQueryEvents() {

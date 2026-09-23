@@ -86,6 +86,10 @@ func (a *App) UpdateActivityBlockAssignment(id int64, taskID *int64) error {
 	return a.store.UpdateActivityBlockAssignment(id, taskID)
 }
 
+func (a *App) UpdateActivityBlockProjectOnly(id int64, projectID int64) error {
+	return a.store.UpdateActivityBlockProjectOnly(id, projectID)
+}
+
 func (a *App) SplitActivityBlock(id int64, splitAt time.Time) (int64, error) {
 	return a.store.SplitActivityBlock(id, splitAt)
 }

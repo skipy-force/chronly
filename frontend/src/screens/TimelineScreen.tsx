@@ -1,13 +1,15 @@
 import { useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronDown, ChevronLeft, ChevronRight, X } from 'lucide-react'
 import { api } from '../lib/api'
 import { queryKeys } from '../lib/queryClient'
 import { TimelineList } from '../components/TimelineList'
 import { TimelineByApp } from '../components/TimelineByApp'
 import { DatePicker } from '../components/DatePicker'
-import { localDateKey, formatHoursMinutes } from '../lib/dates'
+import { AppIconBadge } from '../lib/appIcons'
+import { prettyAppName } from '../lib/appNames'
+import { localDateKey, formatHoursMinutes, formatClockTime } from '../lib/dates'
 import { useUiStore, type TimelineView } from '../store/uiStore'
 import { fadeInVariants, staggerContainer } from '../lib/motion'
 import { useT } from '../lib/i18n'
@@ -40,9 +42,16 @@ export function TimelineScreen() {
 
   const [assigningIndex, setAssigningIndex] = useState<number | null>(null)
 
-  const assignMutation = useMutation({
-    mutationFn: ({ id, taskId }: { id: number; taskId: number | null }) =>
-      api.updateActivityBlockAssignment(id, taskId),
+  const assignTaskMutation = useMutation({
+    mutationFn: ({ id, taskId }: { id: number; taskId: number }) => api.updateActivityBlockAssignment(id, taskId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['activityBlocks'] })
+      setAssigningIndex(null)
+    },
+  })
+  const assignProjectMutation = useMutation({
+    mutationFn: ({ id, projectId }: { id: number; projectId: number }) =>
+      api.updateActivityBlockProjectOnly(id, projectId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['activityBlocks'] })
       setAssigningIndex(null)
@@ -127,26 +136,55 @@ export function TimelineScreen() {
       </motion.div>
 
       {assigningIndex !== null && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/50">
-          <div className="w-80 rounded-lg bg-surface-container-high p-4">
-            <p className="mb-2 text-sm text-on-surface-variant">{t('timeline.assignToProject')}</p>
-            {projects.map((p) => (
-              <TaskPicker
-                key={p.ID}
-                projectId={p.ID}
-                projectName={p.Name}
-                onPick={(taskId) => {
-                  const block = blocks[assigningIndex]
-                  assignMutation.mutate({ id: block.ID, taskId })
-                }}
-              />
-            ))}
-            <button
-              onClick={() => setAssigningIndex(null)}
-              className="mt-2 w-full rounded-pill bg-surface-container px-3 py-1.5 text-sm"
-            >
-              {t('common.cancel')}
-            </button>
+        <div
+          className="fixed inset-0 flex items-center justify-center bg-black/50"
+          onClick={() => setAssigningIndex(null)}
+        >
+          <div
+            className="flex max-h-[70vh] w-96 flex-col rounded-lg bg-surface-container-high p-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-3 flex items-center justify-between">
+              <p className="text-sm font-semibold">{t('timeline.assignToProject')}</p>
+              <button
+                onClick={() => setAssigningIndex(null)}
+                className="rounded-pill p-1 text-on-surface-variant hover:bg-surface-container"
+              >
+                <X size={14} />
+              </button>
+            </div>
+
+            {(() => {
+              const block = blocks[assigningIndex]
+              return (
+                <div className="mb-3 flex items-center gap-3 rounded-lg bg-surface-container p-3">
+                  <AppIconBadge appName={block.AppName || ''} size={32} />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium">{prettyAppName(block.AppName)}</p>
+                    <p className="text-xs text-on-surface-variant">
+                      {formatClockTime(new Date(block.StartTime))} – {formatClockTime(new Date(block.EndTime))}
+                    </p>
+                  </div>
+                </div>
+              )
+            })()}
+
+            <div className="flex flex-col gap-2 overflow-y-auto">
+              {projects.map((p) => (
+                <ProjectOption
+                  key={p.ID}
+                  project={p}
+                  onPickTask={(taskId) => {
+                    const block = blocks[assigningIndex]
+                    assignTaskMutation.mutate({ id: block.ID, taskId })
+                  }}
+                  onPickProjectOnly={() => {
+                    const block = blocks[assigningIndex]
+                    assignProjectMutation.mutate({ id: block.ID, projectId: p.ID })
+                  }}
+                />
+              ))}
+            </div>
           </div>
         </div>
       )}
@@ -154,31 +192,60 @@ export function TimelineScreen() {
   )
 }
 
-function TaskPicker({
-  projectId,
-  projectName,
-  onPick,
+function ProjectOption({
+  project,
+  onPickTask,
+  onPickProjectOnly,
 }: {
-  projectId: number
-  projectName: string
-  onPick: (taskId: number) => void
+  project: { ID: number; Name: string; Color: string }
+  onPickTask: (taskId: number) => void
+  onPickProjectOnly: () => void
 }) {
+  const t = useT()
+  const [expanded, setExpanded] = useState(false)
   const { data: tasks = [] } = useQuery({
-    queryKey: queryKeys.tasksByProject(projectId),
-    queryFn: () => api.listTasksByProject(projectId),
+    queryKey: queryKeys.tasksByProject(project.ID),
+    queryFn: () => api.listTasksByProject(project.ID),
+    enabled: expanded,
   })
+
   return (
-    <div className="mb-2">
-      <p className="text-xs font-semibold uppercase text-on-surface-variant">{projectName}</p>
-      {tasks.map((t) => (
-        <button
-          key={t.ID}
-          onClick={() => onPick(t.ID)}
-          className="block w-full rounded-md px-2 py-1 text-left text-sm hover:bg-surface-container"
-        >
-          {t.Name}
-        </button>
-      ))}
+    <div className="overflow-hidden rounded-lg bg-surface-container">
+      <button
+        onClick={() => setExpanded((v) => !v)}
+        className="flex w-full items-center gap-2 p-3 hover:bg-surface-container-high"
+      >
+        <span
+          className="h-2.5 w-2.5 shrink-0 rounded-full"
+          style={{ backgroundColor: project.Color || 'var(--color-primary)' }}
+        />
+        <span className="flex-1 truncate text-left text-sm font-medium">{project.Name}</span>
+        <ChevronDown size={14} className={`text-on-surface-variant transition-transform ${expanded ? 'rotate-180' : ''}`} />
+      </button>
+
+      {expanded && (
+        <div className="flex flex-col gap-1 border-t border-outline/10 p-2">
+          <button
+            onClick={onPickProjectOnly}
+            className="rounded-md px-2 py-1.5 text-left text-xs text-on-surface-variant hover:bg-surface-container-high"
+          >
+            {t('timeline.assignProjectOnly')}
+          </button>
+          {tasks.length === 0 ? (
+            <p className="px-2 py-1 text-xs text-on-surface-variant/60">{t('timeline.noTasks')}</p>
+          ) : (
+            tasks.map((task) => (
+              <button
+                key={task.ID}
+                onClick={() => onPickTask(task.ID)}
+                className="rounded-md px-2 py-1.5 text-left text-sm hover:bg-surface-container-high"
+              >
+                {task.Name}
+              </button>
+            ))
+          )}
+        </div>
+      )}
     </div>
   )
 }

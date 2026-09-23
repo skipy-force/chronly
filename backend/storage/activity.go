@@ -59,6 +59,14 @@ func (s *Store) UpdateActivityBlockAssignment(id int64, taskID *int64) error {
 	return err
 }
 
+func (s *Store) UpdateActivityBlockProjectOnly(id int64, projectID int64) error {
+	_, err := s.db.Exec(
+		`UPDATE activity_blocks SET task_id = NULL, project_id = ?, assigned_by = 'manual' WHERE id = ?`,
+		projectID, id,
+	)
+	return err
+}
+
 func (s *Store) SplitActivityBlock(id int64, splitAt time.Time) (int64, error) {
 	var startTime, endTime time.Time
 	var appName, windowTitle string

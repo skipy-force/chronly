@@ -49,6 +49,10 @@ func (a *App) startup(ctx context.Context) {
 	if err != nil {
 		log.Fatalf("resolve db path: %v", err)
 	}
+	if _, err := setupFileLogging(path); err != nil {
+		log.Printf("file logging unavailable: %v", err)
+	}
+
 	store, err := storage.Open(path)
 	if err != nil {
 		log.Fatalf("open storage: %v", err)

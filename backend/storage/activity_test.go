@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"database/sql"
 	"testing"
 	"time"
 
@@ -179,6 +180,46 @@ func TestUpdateActivityBlockAssignment_SetsTaskAndProject(t *testing.T) {
 	}
 	if gotTaskID != 10 || gotProjectID != 1 || gotAssignedBy != "manual" {
 		t.Fatalf("expected task=10 project=1 assigned_by=manual, got task=%d project=%d assigned_by=%s",
+			gotTaskID, gotProjectID, gotAssignedBy)
+	}
+}
+
+func TestUpdateActivityBlockProjectOnly_SetsProjectAndClearsTask(t *testing.T) {
+	s := newTestStore(t)
+	if _, err := s.db.Exec(`INSERT INTO projects (id, name) VALUES (1, 'a')`); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := s.db.Exec(`INSERT INTO tasks (id, project_id, name) VALUES (10, 1, 't')`); err != nil {
+		t.Fatal(err)
+	}
+	start := time.Date(2026, 1, 1, 12, 0, 0, 0, time.UTC)
+	id, err := s.SaveActivityBlock(
+		tracker.Block{StartTime: start, EndTime: start.Add(time.Minute), AppName: "code", WindowTitle: "x"},
+		tracker.Assignment{},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	taskID := int64(10)
+	if err := s.UpdateActivityBlockAssignment(id, &taskID); err != nil {
+		t.Fatalf("UpdateActivityBlockAssignment: %v", err)
+	}
+
+	if err := s.UpdateActivityBlockProjectOnly(id, 1); err != nil {
+		t.Fatalf("UpdateActivityBlockProjectOnly: %v", err)
+	}
+
+	var gotProjectID int64
+	var gotTaskID sql.NullInt64
+	var gotAssignedBy string
+	if err := s.db.QueryRow(
+		`SELECT task_id, project_id, assigned_by FROM activity_blocks WHERE id = ?`, id,
+	).Scan(&gotTaskID, &gotProjectID, &gotAssignedBy); err != nil {
+		t.Fatal(err)
+	}
+	if gotTaskID.Valid || gotProjectID != 1 || gotAssignedBy != "manual" {
+		t.Fatalf("expected task=NULL project=1 assigned_by=manual, got task=%+v project=%d assigned_by=%s",
 			gotTaskID, gotProjectID, gotAssignedBy)
 	}
 }

@@ -42,6 +42,10 @@ export function GetIdleDetectorTier() {
   return window['go']['main']['App']['GetIdleDetectorTier']();
 }
 
+export function GetRecentLogs(arg1) {
+  return window['go']['main']['App']['GetRecentLogs'](arg1);
+}
+
 export function GetThemeCSS() {
   return window['go']['main']['App']['GetThemeCSS']();
 }
@@ -112,6 +116,10 @@ export function UnarchiveProject(arg1) {
 
 export function UpdateActivityBlockAssignment(arg1, arg2) {
   return window['go']['main']['App']['UpdateActivityBlockAssignment'](arg1, arg2);
+}
+
+export function UpdateActivityBlockProjectOnly(arg1, arg2) {
+  return window['go']['main']['App']['UpdateActivityBlockProjectOnly'](arg1, arg2);
 }
 
 export function UpdateAssignmentRule(arg1) {

@@ -23,6 +23,8 @@ export function GetDBPath():Promise<string>;
 
 export function GetIdleDetectorTier():Promise<string>;
 
+export function GetRecentLogs(arg1:number):Promise<string>;
+
 export function GetThemeCSS():Promise<string>;
 
 export function Greet(arg1:string):Promise<string>;
@@ -58,6 +60,8 @@ export function SplitActivityBlock(arg1:number,arg2:time.Time):Promise<number>;
 export function UnarchiveProject(arg1:number):Promise<void>;
 
 export function UpdateActivityBlockAssignment(arg1:number,arg2:any):Promise<void>;
+
+export function UpdateActivityBlockProjectOnly(arg1:number,arg2:number):Promise<void>;
 
 export function UpdateAssignmentRule(arg1:tracker.Rule):Promise<void>;
 

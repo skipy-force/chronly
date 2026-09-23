@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { ExternalLink, FolderOpen, Upload, X } from 'lucide-react'
+import { Droplet, ExternalLink, FolderOpen, RefreshCw, Upload, X } from 'lucide-react'
 import { api } from '../lib/api'
 import { queryKeys } from '../lib/queryClient'
 import { useUiStore, type NavStyle, type Lang } from '../store/uiStore'
@@ -15,6 +15,7 @@ type Section = 'welcome' | 'general' | 'profile' | 'appearance' | 'tracking' | '
 const REPO_URL = 'https://github.com/skipy-force/chronly'
 
 const UI_SCALE_PRESETS = [90, 100, 110, 125, 150]
+const DEV_UNLOCK_TAPS = 6
 
 const sectionVariants = fadeInVariants(0.35, 10)
 
@@ -177,20 +178,57 @@ function GeneralSection() {
       </motion.section>
 
       <motion.section variants={sectionVariants}>
-        <label className="flex cursor-pointer items-center gap-3 rounded-lg bg-surface-container p-3">
-          <input
-            type="checkbox"
-            checked={showDeveloperSettings}
-            onChange={(e) => setShowDeveloperSettings(e.target.checked)}
-            className="h-4 w-4 accent-primary"
-          />
-          <div>
-            <p className="text-sm">{t('settings.showDeveloperSettings')}</p>
-            <p className="text-xs text-on-surface-variant">{t('settings.showDeveloperSettings.desc')}</p>
-          </div>
-        </label>
+        <DevUnlockButton showDeveloperSettings={showDeveloperSettings} setShowDeveloperSettings={setShowDeveloperSettings} />
       </motion.section>
     </div>
+  )
+}
+
+function DevUnlockButton({
+  showDeveloperSettings,
+  setShowDeveloperSettings,
+}: {
+  showDeveloperSettings: boolean
+  setShowDeveloperSettings: (v: boolean) => void
+}) {
+  const t = useT()
+  const [taps, setTaps] = useState(0)
+
+  const handleClick = () => {
+    if (showDeveloperSettings) {
+      setShowDeveloperSettings(false)
+      setTaps(0)
+      return
+    }
+    const next = taps + 1
+    if (next >= DEV_UNLOCK_TAPS) {
+      setShowDeveloperSettings(true)
+      setTaps(0)
+    } else {
+      setTaps(next)
+    }
+  }
+
+  const fillRatio = showDeveloperSettings ? 1 : taps / DEV_UNLOCK_TAPS
+
+  return (
+    <button
+      onClick={handleClick}
+      className="relative flex h-12 w-full items-center justify-center overflow-hidden rounded-lg bg-surface-container text-sm"
+    >
+      <motion.div
+        className="absolute inset-x-0 bottom-0 bg-sky-500/40"
+        initial={false}
+        animate={{ height: `${fillRatio * 100}%` }}
+        transition={{ type: 'spring', bounce: 0.4, duration: 0.5 }}
+      />
+      <span className="relative z-10 flex items-center gap-2">
+        <Droplet size={14} className={showDeveloperSettings ? 'text-sky-400' : 'text-on-surface-variant'} />
+        {showDeveloperSettings
+          ? t('settings.devUnlock.unlocked')
+          : t('settings.devUnlock.locked', { n: DEV_UNLOCK_TAPS - taps })}
+      </span>
+    </button>
   )
 }
 
@@ -388,6 +426,34 @@ function DeveloperSection() {
           {t('settings.developer.openFolder')}
         </button>
       </div>
+
+      <LogsViewer />
     </motion.section>
+  )
+}
+
+function LogsViewer() {
+  const t = useT()
+  const { data: logs, refetch, isFetching } = useQuery({
+    queryKey: ['recentLogs'],
+    queryFn: () => api.getRecentLogs(300),
+  })
+
+  return (
+    <div className="mt-4">
+      <div className="mb-2 flex items-center justify-between">
+        <h2 className="text-sm font-semibold uppercase text-on-surface-variant">{t('settings.developer.logs')}</h2>
+        <button
+          onClick={() => refetch()}
+          className="flex items-center gap-1.5 rounded-pill bg-surface-container px-3 py-1 text-xs hover:bg-surface-container-high"
+        >
+          <RefreshCw size={12} className={isFetching ? 'animate-spin' : ''} />
+          {t('settings.developer.refresh')}
+        </button>
+      </div>
+      <pre className="h-64 overflow-auto whitespace-pre-wrap break-all rounded-lg bg-surface-container p-3 font-mono text-xs text-on-surface-variant">
+        {logs || t('settings.developer.noLogs')}
+      </pre>
+    </div>
   )
 }

@@ -19,9 +19,8 @@ const dict: Record<Lang, Record<string, string>> = {
     'welcome.viewOnGithub': 'View on GitHub',
 
     'settings.language': 'Language',
-    'settings.showDeveloperSettings': 'Show developer settings',
-    'settings.showDeveloperSettings.desc':
-      'Expose the Developer section, with database path, app version, and diagnostics.',
+    'settings.devUnlock.locked': 'Tap {n} more times to unlock developer mode',
+    'settings.devUnlock.unlocked': 'Developer mode unlocked — tap to lock again',
 
     'settings.navStyle.title': 'Navigation style',
     'settings.navStyle.sidebar': 'Sidebar',
@@ -51,6 +50,9 @@ const dict: Record<Lang, Record<string, string>> = {
     'settings.developer.database': 'Database',
     'settings.developer.version': 'Version',
     'settings.developer.openFolder': 'Open data folder',
+    'settings.developer.logs': 'Logs',
+    'settings.developer.refresh': 'Refresh',
+    'settings.developer.noLogs': 'No logs yet.',
 
     'common.save': 'Save',
     'common.cancel': 'Cancel',
@@ -106,6 +108,8 @@ const dict: Record<Lang, Record<string, string>> = {
     'timeline.empty': 'No activity tracked on this day',
     'timeline.notAssigned': 'not assigned yet',
     'timeline.assignToProject': 'Assign to project',
+    'timeline.assignProjectOnly': 'Assign to project (no task)',
+    'timeline.noTasks': 'No tasks in this project',
     'timeline.lastActive': 'last active',
 
     'projects.title': 'Projects',
@@ -148,8 +152,8 @@ const dict: Record<Lang, Record<string, string>> = {
     'welcome.viewOnGithub': 'Репозиторий на GitHub',
 
     'settings.language': 'Язык',
-    'settings.showDeveloperSettings': 'Показывать настройки разработчика',
-    'settings.showDeveloperSettings.desc': 'Открыть раздел «Разработчик» — путь к базе, версия, диагностика.',
+    'settings.devUnlock.locked': 'Нажми ещё {n} раз, чтобы открыть режим разработчика',
+    'settings.devUnlock.unlocked': 'Режим разработчика открыт — нажми, чтобы закрыть',
 
     'settings.navStyle.title': 'Стиль навигации',
     'settings.navStyle.sidebar': 'Боковая панель',
@@ -179,6 +183,9 @@ const dict: Record<Lang, Record<string, string>> = {
     'settings.developer.database': 'База данных',
     'settings.developer.version': 'Версия',
     'settings.developer.openFolder': 'Открыть папку с данными',
+    'settings.developer.logs': 'Логи',
+    'settings.developer.refresh': 'Обновить',
+    'settings.developer.noLogs': 'Логов пока нет.',
 
     'common.save': 'Сохранить',
     'common.cancel': 'Отмена',
@@ -234,6 +241,8 @@ const dict: Record<Lang, Record<string, string>> = {
     'timeline.empty': 'За этот день активность не отслежена',
     'timeline.notAssigned': 'ещё не назначено',
     'timeline.assignToProject': 'Назначить проект',
+    'timeline.assignProjectOnly': 'Назначить проект (без задачи)',
+    'timeline.noTasks': 'В проекте нет задач',
     'timeline.lastActive': 'последняя активность',
 
     'projects.title': 'Проекты',
