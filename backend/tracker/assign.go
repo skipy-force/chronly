@@ -3,6 +3,7 @@ package tracker
 import "strings"
 
 type Rule struct {
+	ID          int64
 	PatternType string
 	Pattern     string
 	ProjectID   int64
