@@ -12,6 +12,7 @@ import (
 	"chronly/backend/tracker"
 
 	"github.com/energye/systray"
+	"github.com/fsnotify/fsnotify"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
@@ -26,6 +27,7 @@ type App struct {
 	cancel           context.CancelFunc
 	tray             *Tray
 	idleDetectorTier string
+	themeWatcher     *fsnotify.Watcher
 }
 
 func NewApp() *App {
@@ -59,11 +61,18 @@ func (a *App) startup(ctx context.Context) {
 
 	windowTracker := tracker.NewHyprlandTracker()
 	runner := tracker.NewRunner(windowTracker, idle, afkThreshold, store, store, store)
+	runner.OnBlockSaved = func(b tracker.Block) {
+		emitBlockClosed(ctx, b)
+	}
 	go func() {
 		if err := runner.Run(runCtx); err != nil {
 			log.Printf("runner stopped: %v", err)
 		}
 	}()
+
+	if err := a.watchTheme(runCtx); err != nil {
+		log.Printf("theme watcher unavailable: %v", err)
+	}
 
 	a.tray = newTray(a)
 	go a.tray.run()
@@ -73,10 +82,85 @@ func (a *App) shutdown(ctx context.Context) {
 	if a.cancel != nil {
 		a.cancel()
 	}
+	if a.themeWatcher != nil {
+		a.themeWatcher.Close()
+	}
 	if a.store != nil {
 		a.store.Close()
 	}
 	systray.Quit()
+}
+
+func (a *App) watchTheme(ctx context.Context) error {
+	watcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		return err
+	}
+	a.themeWatcher = watcher
+
+	path, err := themeCSSPath()
+	if err != nil {
+		return err
+	}
+	dir := filepath.Dir(path)
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		return err
+	}
+	if err := watcher.Add(dir); err != nil {
+		return err
+	}
+
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				watcher.Close()
+				return
+			case event, ok := <-watcher.Events:
+				if !ok {
+					return
+				}
+				if filepath.Clean(event.Name) != filepath.Clean(path) {
+					continue
+				}
+				css, err := a.GetThemeCSS()
+				if err != nil {
+					log.Printf("reload theme: %v", err)
+					continue
+				}
+				emitThemeChanged(a.ctx, css)
+			case err, ok := <-watcher.Errors:
+				if !ok {
+					return
+				}
+				log.Printf("theme watcher error: %v", err)
+			}
+		}
+	}()
+	return nil
+}
+
+func (a *App) GetThemeCSS() (string, error) {
+	path, err := themeCSSPath()
+	if err != nil {
+		return "", err
+	}
+	data, err := os.ReadFile(path)
+	if os.IsNotExist(err) {
+		return "", nil
+	}
+	if err != nil {
+		return "", err
+	}
+	return string(data), nil
+}
+
+func themeCSSPath() (string, error) {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(home, ".config", "colors", "matugen", "chronly.css"), nil
 }
 
 func (a *App) beforeClose(ctx context.Context) bool {

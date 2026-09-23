@@ -25,6 +25,7 @@ type Runner struct {
 	state        StateSource
 	sink         BlockSink
 	pollInterval time.Duration
+	OnBlockSaved func(Block)
 }
 
 func NewRunner(t WindowTracker, idle IdleDetector, afkThreshold time.Duration, rules RuleSource, state StateSource, sink BlockSink) *Runner {
@@ -89,6 +90,11 @@ func (r *Runner) process(s Sample) error {
 	}
 
 	assignment := Resolve(block, state.CurrentTaskID, state.CurrentProjectID, rules)
-	_, err = r.sink.SaveActivityBlock(block, assignment)
-	return err
+	if _, err := r.sink.SaveActivityBlock(block, assignment); err != nil {
+		return err
+	}
+	if r.OnBlockSaved != nil {
+		r.OnBlockSaved(block)
+	}
+	return nil
 }

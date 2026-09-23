@@ -110,3 +110,34 @@ func TestRunner_PauseClosesOpenBlockAndSkipsAggregation(t *testing.T) {
 		t.Fatalf("expected the paused block to be 'code', got %+v", sink.saved[0])
 	}
 }
+
+func TestRunner_CallsOnBlockSavedWhenBlockCloses(t *testing.T) {
+	tr := &fakeTracker{
+		events: []WindowInfo{
+			{AppName: "code", WindowTitle: "main.go"},
+			{AppName: "firefox", WindowTitle: "docs"},
+		},
+		delay: 10 * time.Millisecond,
+	}
+	sink := &fakeSink{}
+	r := NewRunner(tr, &fakeIdle{}, 3*time.Minute, &fakeRules{}, &fakeState{}, sink)
+	r.pollInterval = 5 * time.Millisecond
+
+	var saved []Block
+	var mu sync.Mutex
+	r.OnBlockSaved = func(b Block) {
+		mu.Lock()
+		defer mu.Unlock()
+		saved = append(saved, b)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+	defer cancel()
+	r.Run(ctx)
+
+	mu.Lock()
+	defer mu.Unlock()
+	if len(saved) != 1 || saved[0].AppName != "code" {
+		t.Fatalf("expected OnBlockSaved called once with the 'code' block, got %+v", saved)
+	}
+}

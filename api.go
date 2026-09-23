@@ -1,6 +1,10 @@
 package main
 
-import "chronly/backend/tracker"
+import (
+	"time"
+
+	"chronly/backend/tracker"
+)
 
 func (a *App) ListProjects() ([]tracker.Project, error) {
 	return a.store.ListProjects()
@@ -55,9 +59,49 @@ func (a *App) GetAppState() (tracker.AppState, error) {
 }
 
 func (a *App) SetCurrentTask(taskID *int64) error {
-	return a.store.SetCurrentTask(taskID)
+	if err := a.store.SetCurrentTask(taskID); err != nil {
+		return err
+	}
+	if state, err := a.store.GetAppState(); err == nil {
+		emitStateChanged(a.ctx, state)
+	}
+	return nil
 }
 
 func (a *App) SetTrackingPaused(paused bool) error {
-	return a.store.SetTrackingPaused(paused)
+	if err := a.store.SetTrackingPaused(paused); err != nil {
+		return err
+	}
+	if state, err := a.store.GetAppState(); err == nil {
+		emitStateChanged(a.ctx, state)
+	}
+	return nil
+}
+
+func (a *App) ListActivityBlocksForRange(start, end time.Time) ([]tracker.Block, error) {
+	return a.store.ListActivityBlocksForRange(start, end)
+}
+
+func (a *App) UpdateActivityBlockAssignment(id int64, taskID *int64) error {
+	return a.store.UpdateActivityBlockAssignment(id, taskID)
+}
+
+func (a *App) SplitActivityBlock(id int64, splitAt time.Time) (int64, error) {
+	return a.store.SplitActivityBlock(id, splitAt)
+}
+
+func (a *App) ListAssignmentRules() ([]tracker.Rule, error) {
+	return a.store.ListAssignmentRulesByPriority()
+}
+
+func (a *App) CreateAssignmentRule(r tracker.Rule) (int64, error) {
+	return a.store.CreateAssignmentRule(r)
+}
+
+func (a *App) UpdateAssignmentRule(r tracker.Rule) error {
+	return a.store.UpdateAssignmentRule(r)
+}
+
+func (a *App) DeleteAssignmentRule(id int64) error {
+	return a.store.DeleteAssignmentRule(id)
 }

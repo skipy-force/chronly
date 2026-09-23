@@ -6,6 +6,10 @@ export function ArchiveProject(arg1) {
   return window['go']['main']['App']['ArchiveProject'](arg1);
 }
 
+export function CreateAssignmentRule(arg1) {
+  return window['go']['main']['App']['CreateAssignmentRule'](arg1);
+}
+
 export function CreateProject(arg1) {
   return window['go']['main']['App']['CreateProject'](arg1);
 }
@@ -14,12 +18,28 @@ export function CreateTask(arg1) {
   return window['go']['main']['App']['CreateTask'](arg1);
 }
 
+export function DeleteAssignmentRule(arg1) {
+  return window['go']['main']['App']['DeleteAssignmentRule'](arg1);
+}
+
 export function GetAppState() {
   return window['go']['main']['App']['GetAppState']();
 }
 
+export function GetIdleDetectorTier() {
+  return window['go']['main']['App']['GetIdleDetectorTier']();
+}
+
+export function GetThemeCSS() {
+  return window['go']['main']['App']['GetThemeCSS']();
+}
+
 export function Greet(arg1) {
   return window['go']['main']['App']['Greet'](arg1);
+}
+
+export function ListActivityBlocksForRange(arg1, arg2) {
+  return window['go']['main']['App']['ListActivityBlocksForRange'](arg1, arg2);
 }
 
 export function ListArchivedProjects() {
@@ -28,6 +48,10 @@ export function ListArchivedProjects() {
 
 export function ListArchivedTasksByProject(arg1) {
   return window['go']['main']['App']['ListArchivedTasksByProject'](arg1);
+}
+
+export function ListAssignmentRules() {
+  return window['go']['main']['App']['ListAssignmentRules']();
 }
 
 export function ListDoneTasksByProject(arg1) {
@@ -54,8 +78,20 @@ export function SetTrackingPaused(arg1) {
   return window['go']['main']['App']['SetTrackingPaused'](arg1);
 }
 
+export function SplitActivityBlock(arg1, arg2) {
+  return window['go']['main']['App']['SplitActivityBlock'](arg1, arg2);
+}
+
 export function UnarchiveProject(arg1) {
   return window['go']['main']['App']['UnarchiveProject'](arg1);
+}
+
+export function UpdateActivityBlockAssignment(arg1, arg2) {
+  return window['go']['main']['App']['UpdateActivityBlockAssignment'](arg1, arg2);
+}
+
+export function UpdateAssignmentRule(arg1) {
+  return window['go']['main']['App']['UpdateAssignmentRule'](arg1);
 }
 
 export function UpdateProject(arg1) {
