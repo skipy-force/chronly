@@ -75,7 +75,7 @@ func (t *Tray) onExit() {}
 func (t *Tray) onPauseClicked() {
 	paused := !t.pause.Checked()
 	log.Printf("tray: pause clicked, currentlyChecked=%v -> settingPaused=%v", t.pause.Checked(), paused)
-	if err := t.app.store.SetTrackingPaused(paused); err != nil {
+	if err := t.app.SetTrackingPaused(paused); err != nil {
 		log.Printf("tray: SetTrackingPaused(%v) failed: %v", paused, err)
 		return
 	}
@@ -104,7 +104,7 @@ func (t *Tray) onSlotClicked(i int) func() {
 		if taskID == 0 {
 			return
 		}
-		if err := t.app.store.SetCurrentTask(&taskID); err != nil {
+		if err := t.app.SetCurrentTask(&taskID); err != nil {
 			log.Printf("tray: SetCurrentTask(%d) failed: %v", taskID, err)
 			return
 		}

@@ -46,7 +46,7 @@ export function BlockChain({ blocks, durationLabel, onSelect }: BlockChainProps)
         </svg>
 
         {blocks.map((block, i) => {
-          const unsorted = block.TaskID == null
+          const unsorted = block.ProjectID == null
           const x = NODE_SPACING * (i + 1)
           const y = nodeY(i)
           return (

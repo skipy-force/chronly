@@ -46,6 +46,8 @@ export function RulesGraph({ rules, projects, onDeleteRule }: RulesGraphProps) {
   const draggingId = useRef<string | null>(null)
 
   useEffect(() => {
+    const projectIds = new Set(projects.map((p) => p.ID))
+
     const projectNodes: GraphNode[] = projects
       .filter((p) => rules.some((r) => r.ProjectID === p.ID))
       .map((p) => ({ id: `project-${p.ID}`, kind: 'project', label: p.Name }))
@@ -58,10 +60,17 @@ export function RulesGraph({ rules, projects, onDeleteRule }: RulesGraphProps) {
     }))
 
     const graphNodes = [...projectNodes, ...ruleNodes]
-    const graphLinks: GraphLink[] = rules.map((r) => ({
-      source: `rule-${r.ID}`,
-      target: `project-${r.ProjectID}`,
-    }))
+    // A rule can point at a project that's no longer in `projects` (e.g. it
+    // was archived, which removes it from ListProjects). forceLink throws if
+    // a link references a node id with no matching node, so only link rules
+    // whose target project is actually present — the rule node itself still
+    // renders, just unconnected, so it stays deletable.
+    const graphLinks: GraphLink[] = rules
+      .filter((r) => projectIds.has(r.ProjectID))
+      .map((r) => ({
+        source: `rule-${r.ID}`,
+        target: `project-${r.ProjectID}`,
+      }))
 
     const simulation = forceSimulation<GraphNode>(graphNodes)
       .force(

@@ -4,6 +4,7 @@ import { queryClient } from './lib/queryClient'
 import { installMatugenTheme } from './lib/theme'
 import { useQueryEvents } from './lib/api'
 import { Shell } from './components/shells'
+import { ErrorBoundary } from './components/ErrorBoundary'
 import { useUiStore } from './store/uiStore'
 import { TodayScreen } from './screens/TodayScreen'
 import { TimelineScreen } from './screens/TimelineScreen'
@@ -29,9 +30,12 @@ function ActiveScreen() {
 
 function AppShell() {
   useQueryEvents()
+  const activeScreen = useUiStore((s) => s.activeScreen)
   return (
     <Shell>
-      <ActiveScreen />
+      <ErrorBoundary key={activeScreen}>
+        <ActiveScreen />
+      </ErrorBoundary>
     </Shell>
   )
 }

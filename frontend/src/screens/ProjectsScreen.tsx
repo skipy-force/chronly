@@ -3,12 +3,12 @@ import { useQuery } from '@tanstack/react-query'
 import { api } from '../lib/api'
 import { queryKeys } from '../lib/queryClient'
 
+const ALL_TIME_KEY = ['activityBlocks', 'all-time'] as const
+
 function useActualMinutesForProject(projectId: number): number {
-  const start = new Date(0).toISOString()
-  const end = new Date().toISOString()
   const { data: blocks = [] } = useQuery({
-    queryKey: queryKeys.activityBlocks(start, end),
-    queryFn: () => api.listActivityBlocksForRange(start, end),
+    queryKey: ALL_TIME_KEY,
+    queryFn: () => api.listActivityBlocksForRange(new Date(0).toISOString(), new Date().toISOString()),
   })
   return blocks
     .filter((b) => b.ProjectID === projectId)
@@ -18,7 +18,9 @@ function useActualMinutesForProject(projectId: number): number {
 function ProjectCard({ project }: { project: { ID: number; Name: string; EstimateMinutes?: number } }) {
   const actual = useActualMinutesForProject(project.ID)
   const estimate = project.EstimateMinutes ?? 0
-  const pct = estimate > 0 ? Math.min(100, Math.round((actual / estimate) * 100)) : 0
+  const ratio = estimate > 0 ? actual / estimate : 0
+  const pct = Math.min(100, Math.round(ratio * 100))
+  const overBudget = ratio > 1
 
   return (
     <div className="rounded-lg bg-surface-container p-4">
@@ -31,7 +33,7 @@ function ProjectCard({ project }: { project: { ID: number; Name: string; Estimat
       {estimate > 0 && (
         <div className="h-2 overflow-hidden rounded-pill bg-surface-container-high">
           <div
-            className={`h-full rounded-pill ${pct > 100 ? 'bg-error' : 'bg-primary'}`}
+            className={`h-full rounded-pill ${overBudget ? 'bg-error' : 'bg-primary'}`}
             style={{ width: `${pct}%` }}
           />
         </div>

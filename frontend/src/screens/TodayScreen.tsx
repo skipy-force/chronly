@@ -33,7 +33,8 @@ export function TodayScreen() {
   })
 
   const lastBlock = blocks[blocks.length - 1]
-  const elapsed = useElapsedSince(lastBlock ? lastBlock.StartTime : null)
+  const tracking = !appState?.TrackingPaused
+  const elapsed = useElapsedSince(tracking && lastBlock ? lastBlock.StartTime : null)
 
   const totalMinutesToday = blocks.reduce((sum, b) => {
     const start = new Date(b.StartTime).getTime()
@@ -41,7 +42,7 @@ export function TodayScreen() {
     return sum + (end - start) / 60000
   }, 0)
 
-  const unsortedCount = blocks.filter((b) => b.TaskID == null).length
+  const unsortedCount = blocks.filter((b) => b.ProjectID == null).length
 
   const satellites: Satellite[] = [
     { id: 'total', label: 'Today', value: `${Math.round(totalMinutesToday)}m`, angleDeg: -90 },
@@ -53,7 +54,7 @@ export function TodayScreen() {
   return (
     <div className="flex h-full flex-col items-center justify-center gap-8 p-6">
       <RadialHub
-        centerLabel={lastBlock ? lastBlock.AppName : 'No activity yet'}
+        centerLabel={!tracking ? 'Paused' : lastBlock ? lastBlock.AppName : 'No activity yet'}
         centerValue={elapsed}
         satellites={satellites}
         onCenterClick={() => pauseMutation.mutate(!appState?.TrackingPaused)}
