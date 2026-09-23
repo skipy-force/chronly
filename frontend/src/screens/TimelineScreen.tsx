@@ -49,14 +49,16 @@ export function TimelineScreen() {
         />
       </div>
 
-      <TimelineGraph
-        blocks={blocks}
-        durationLabel={(block) => {
-          const durationMs = new Date(block.EndTime).getTime() - new Date(block.StartTime).getTime()
-          return `${Math.round(durationMs / 60000)}m`
-        }}
-        onSelect={(index) => setAssigningIndex(index)}
-      />
+      <div className="min-h-0 flex-1">
+        <TimelineGraph
+          blocks={blocks}
+          durationLabel={(block) => {
+            const durationMs = new Date(block.EndTime).getTime() - new Date(block.StartTime).getTime()
+            return `${Math.round(durationMs / 60000)}m`
+          }}
+          onSelect={(index) => setAssigningIndex(index)}
+        />
+      </div>
 
       {assigningIndex !== null && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/50">

@@ -26,8 +26,12 @@ interface TimelineGraphProps {
   onSelect: (index: number) => void
 }
 
-const WIDTH = 720
-const HEIGHT = 460
+function nodeRadiusFor(count: number): number {
+  if (count > 150) return 8
+  if (count > 80) return 12
+  if (count > 40) return 18
+  return 30
+}
 
 function curvedPath(x1: number, y1: number, x2: number, y2: number): string {
   const midX = (x1 + x2) / 2
@@ -41,12 +45,27 @@ function curvedPath(x1: number, y1: number, x2: number, y2: number): string {
 }
 
 export function TimelineGraph({ blocks, durationLabel, onSelect }: TimelineGraphProps) {
+  const containerRef = useRef<HTMLDivElement | null>(null)
+  const [size, setSize] = useState({ width: 800, height: 560 })
   const [nodes, setNodes] = useState<GraphNode[]>([])
   const [links, setLinks] = useState<GraphLink[]>([])
   const simulationRef = useRef<ReturnType<typeof forceSimulation<GraphNode>> | null>(null)
   const draggingId = useRef<string | null>(null)
 
   useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+    const observer = new ResizeObserver(([entry]) => {
+      const { width, height } = entry.contentRect
+      if (width > 0 && height > 0) setSize({ width, height })
+    })
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+
+  useEffect(() => {
+    const radius = nodeRadiusFor(blocks.length)
+
     const graphNodes: GraphNode[] = blocks.map((b, i) => ({
       id: `block-${i}`,
       index: i,
@@ -60,16 +79,18 @@ export function TimelineGraph({ blocks, durationLabel, onSelect }: TimelineGraph
       graphLinks.push({ source: `block-${i}`, target: `block-${i + 1}` })
     }
 
+    const chargeStrength = -(60 + radius * 8)
+
     const simulation = forceSimulation<GraphNode>(graphNodes)
       .force(
         'link',
         forceLink<GraphNode, GraphLink>(graphLinks)
           .id((d) => d.id)
-          .distance(110),
+          .distance(radius * 3.5),
       )
-      .force('charge', forceManyBody().strength(-220))
-      .force('center', forceCenter(WIDTH / 2, HEIGHT / 2))
-      .force('collide', forceCollide(42))
+      .force('charge', forceManyBody().strength(chargeStrength).distanceMax(300))
+      .force('center', forceCenter(size.width / 2, size.height / 2))
+      .force('collide', forceCollide(radius + 4))
       .on('tick', () => {
         setNodes([...graphNodes])
         setLinks([...graphLinks])
@@ -79,7 +100,8 @@ export function TimelineGraph({ blocks, durationLabel, onSelect }: TimelineGraph
     return () => {
       simulation.stop()
     }
-  }, [blocks, durationLabel])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [blocks, durationLabel, size.width, size.height])
 
   function onPointerDown(e: React.PointerEvent, node: GraphNode) {
     e.currentTarget.setPointerCapture(e.pointerId)
@@ -105,54 +127,70 @@ export function TimelineGraph({ blocks, durationLabel, onSelect }: TimelineGraph
   }
 
   let svgEl: SVGSVGElement | null = null
+  const radius = nodeRadiusFor(blocks.length)
+  const showLabels = radius >= 18
 
   return (
-    <svg
-      ref={(el) => {
-        svgEl = el
-      }}
-      width={WIDTH}
-      height={HEIGHT}
-      className="rounded-lg bg-surface-container select-none"
-      onPointerMove={(e) => onPointerMove(e, svgEl)}
-      onPointerUp={onPointerUp}
-    >
-      {links.map((l, i) => {
-        const source = l.source as GraphNode
-        const target = l.target as GraphNode
-        if (typeof source === 'string' || typeof target === 'string') return null
-        return (
-          <path
-            key={i}
-            d={curvedPath(source.x ?? 0, source.y ?? 0, target.x ?? 0, target.y ?? 0)}
-            className="fill-none stroke-outline/50"
-            strokeWidth="1.5"
-            strokeDasharray="4 5"
-          />
-        )
-      })}
+    <div ref={containerRef} className="h-full w-full overflow-hidden rounded-lg bg-surface-container">
+      <svg
+        ref={(el) => {
+          svgEl = el
+        }}
+        width={size.width}
+        height={size.height}
+        className="select-none"
+        onPointerMove={(e) => onPointerMove(e, svgEl)}
+        onPointerUp={onPointerUp}
+      >
+        {links.map((l, i) => {
+          const source = l.source as GraphNode
+          const target = l.target as GraphNode
+          if (typeof source === 'string' || typeof target === 'string') return null
+          return (
+            <path
+              key={i}
+              d={curvedPath(source.x ?? 0, source.y ?? 0, target.x ?? 0, target.y ?? 0)}
+              className="fill-none stroke-outline/40"
+              strokeWidth="1"
+              strokeDasharray="3 4"
+            />
+          )
+        })}
 
-      {nodes.map((node) => (
-        <g
-          key={node.id}
-          transform={`translate(${node.x ?? 0}, ${node.y ?? 0})`}
-          onPointerDown={(e) => onPointerDown(e, node)}
-          onClick={() => onSelect(node.index)}
-          className="cursor-grab active:cursor-grabbing"
-        >
-          <circle
-            r={30}
-            className={node.unsorted ? 'fill-error/15 stroke-error' : 'fill-surface-container-high stroke-outline'}
-            strokeWidth={1}
-          />
-          <text textAnchor="middle" dy="-2" className="pointer-events-none fill-on-surface text-[10px] font-medium">
-            {node.label.length > 10 ? node.label.slice(0, 9) + '…' : node.label}
-          </text>
-          <text textAnchor="middle" dy="12" className="pointer-events-none fill-on-surface-variant text-[9px] font-mono">
-            {node.duration}
-          </text>
-        </g>
-      ))}
-    </svg>
+        {nodes.map((node) => (
+          <g
+            key={node.id}
+            transform={`translate(${node.x ?? 0}, ${node.y ?? 0})`}
+            onPointerDown={(e) => onPointerDown(e, node)}
+            onClick={() => onSelect(node.index)}
+            className="cursor-grab active:cursor-grabbing"
+          >
+            <circle
+              r={radius}
+              className={node.unsorted ? 'fill-error/15 stroke-error' : 'fill-surface-container-high stroke-outline'}
+              strokeWidth={1}
+            />
+            {showLabels && (
+              <>
+                <text
+                  textAnchor="middle"
+                  dy="-2"
+                  className="pointer-events-none fill-on-surface text-[10px] font-medium"
+                >
+                  {node.label.length > 10 ? node.label.slice(0, 9) + '…' : node.label}
+                </text>
+                <text
+                  textAnchor="middle"
+                  dy="12"
+                  className="pointer-events-none fill-on-surface-variant text-[9px] font-mono"
+                >
+                  {node.duration}
+                </text>
+              </>
+            )}
+          </g>
+        ))}
+      </svg>
+    </div>
   )
 }
