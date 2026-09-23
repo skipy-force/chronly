@@ -1,7 +1,14 @@
-# chronly
+```
+        __                     __     
+  _____/ /_  _________  ____  / /_  __
+ / ___/ __ \/ ___/ __ \/ __ \/ / / / /
+/ /__/ / / / /  / /_/ / / / / / /_/ / 
+\___/_/ /_/_/   \____/_/ /_/_/\__, /  
+                             /____/   
+```
 
 My own time tracker. I got tired of manually starting/stopping timers and
-never trusting the numbers, so I'm building something that just runs in the
+never trusting the numbers, so I built something that just runs in the
 background on my machine, watches which window I'm actually in, and figures
 out on its own what project/task that time belongs to.
 
@@ -12,54 +19,89 @@ estimate-vs-actual view per project/task for freelance work, and a signal for
 how much of my "work" time is actually AFK/context-switching. Everything
 stays local — SQLite on disk, no cloud sync, no account.
 
-Full reasoning and data model are in
-`docs/superpowers/specs/2026-09-22-chronly-core-design.md`.
+## Features
 
-## Status
+- **Automatic tracking.** Watches the focused window on Hyprland and records
+  activity blocks as you work, splitting them on an AFK threshold you control.
+- **Today dashboard.** Weekly average, today's total, idle time, a Mon–Sun bar
+  chart, a GitHub-style month heatmap, and a per-app time breakdown — navigate
+  to any past day from the same screen.
+- **Timeline.** Every tracked activity for a day, either chronologically or
+  grouped by app with "last active" recency. Reassign any block to a project
+  on the spot.
+- **Projects & tasks.** Track estimate vs. actual time per project, create/edit
+  projects and tasks, archive what you're done with.
+- **Assignment rules.** A pannable, zoomable node graph connects app-name
+  patterns to projects, so new activity gets auto-assigned instead of piling
+  up unsorted.
+- **System tray.** Pause/resume tracking and jump between recent tasks without
+  opening the window.
+- **Live theming.** Reads a [matugen](https://github.com/InioX/matugen)-generated
+  palette and re-themes the whole UI instantly when your wallpaper changes —
+  with a built-in fallback palette when matugen isn't set up.
+- **Real app icons.** Resolves each app's actual icon from your system's
+  `.desktop` files and icon theme, not a generic placeholder.
+- **Configurable navigation.** Sidebar, top tabs, or a Ctrl/Cmd+K command
+  palette — pick whichever fits how you work.
 
-Core tracking engine, storage API, and tray are done. No real frontend yet —
-still the default Wails scaffold screen. Current implementation plan:
-`docs/superpowers/plans/2026-09-22-tracking-engine-core.md`.
+## Requirements
 
-Done so far:
-- SQLite schema + store bootstrap, CRUD for projects/tasks
-- Hyprland window tracker (verified live)
-- Idle detection with fallback chain: Wayland `ext-idle-notify-v1` → raw
-  `/dev/input/event*` polling (mouse+keyboard) → user prompt to continue
-  window-only or quit
-- Aggregator, assignment resolver, activity persistence, Runner wiring
-  (Runner also respects the tracking-paused flag)
-- Wails API bindings exposing all of the above to the frontend
-- System tray: pause toggle, quick task switch, hide-on-close
+- Linux with **Hyprland** (window tracking talks to Hyprland's own IPC socket
+  directly, not the generic `wlr-foreign-toplevel-management` protocol — so
+  Hyprland only, for now)
+- `webkit2gtk-4.1` — on Arch/CachyOS this means building and running with the
+  `webkit2_41` Go build tag (see below); Wails v2 looks for `webkit2gtk-4.0`
+  by default and fails at the pkg-config step otherwise
+- Go 1.25+
+- Node.js + npm
+- [Wails v2](https://wails.io) CLI (`go install github.com/wailsapp/wails/v2/cmd/wails@latest`)
 
-In progress:
-- Frontend (Tailwind/shadcn, Today/Timeline/Projects/Rules/Settings)
-
-## Stack
-
-- Go 1.25 backend, split into `backend/tracker` (pure domain logic, OS deps
-  isolated to platform-tagged files) and `backend/storage` (SQLite)
-- `modernc.org/sqlite` — pure Go driver, no CGO, so cross-compiling for
-  Windows/macOS later stays simple. The tray (`github.com/energye/systray`)
-  is pure Go on Linux too — it talks the StatusNotifierItem/DBusMenu D-Bus
-  protocols directly instead of going through GTK, which matters because
-  Wails' own webview already runs a GTK main loop on Linux, and a second,
-  independent one (as `github.com/getlantern/systray` uses via
-  libappindicator) reliably aborts the process — confirmed by hand before
-  switching libraries.
-- Hyprland's own IPC socket for window tracking (not the generic
-  `wlr-foreign-toplevel-management` protocol) — Linux/Hyprland only for now
-- Wails v2 for the desktop shell; React frontend still pending
-
-## Running
+## Development
 
 ```bash
-wails dev    # live dev mode, hot reload
-wails build  # production build
+wails dev -tags webkit2_41
 ```
 
-On Arch/CachyOS (and other distros that only ship `webkit2gtk-4.1`, not the
-older `4.0`), add `-tags webkit2_41` to both commands — Wails v2 looks for
-`webkit2gtk-4.0` by default and fails at the pkg-config step otherwise.
+Runs the app with hot reload for both the Go backend and the Vite/React frontend.
 
-Backend tests: `go test ./...`
+## Building
+
+```bash
+wails build -tags webkit2_41
+```
+
+Produces a binary in `build/bin/`.
+
+## Verifying changes
+
+```bash
+go build -tags webkit2_41 ./... && go vet -tags webkit2_41 ./... && go test -tags webkit2_41 ./... -count=1
+cd frontend && npx tsc --noEmit -p tsconfig.json && npm run build
+```
+
+## Tech stack
+
+- **Backend:** Go, split into `backend/tracker` (pure domain logic, OS deps
+  isolated to platform-tagged files) and `backend/storage` (SQLite). Uses
+  [Wails v2](https://wails.io) for the desktop shell.
+- **SQLite via `modernc.org/sqlite`** — pure Go driver, no CGO, so
+  cross-compiling later stays simple.
+- **Tray via [energye/systray](https://github.com/energye/systray)** — also
+  pure Go, talks the StatusNotifierItem/DBusMenu D-Bus protocols directly
+  instead of going through GTK. That matters because Wails' own webview
+  already runs a GTK main loop on Linux, and a second, independent one (as
+  `github.com/getlantern/systray` uses via libappindicator) reliably aborts
+  the process — confirmed by hand before switching libraries.
+- **Frontend:** React 19, TypeScript, Vite, Tailwind CSS v4, TanStack Query,
+  Zustand, Framer Motion, `d3-force` (Rules graph), `@tanstack/react-virtual`
+  (Timeline list)
+
+## Data & configuration
+
+- Database: `~/.config/chronly/chronly.db` (SQLite, WAL mode). Override with
+  the `CHRONLY_DB_PATH` environment variable.
+- Theme: reads `~/.config/colors/matugen/chronly.css`, written by matugen.
+
+## License
+
+Not yet decided.
