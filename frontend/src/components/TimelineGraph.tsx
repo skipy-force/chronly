@@ -165,6 +165,10 @@ export function TimelineGraph({ blocks, durationLabel, onSelect }: TimelineGraph
             onClick={() => onSelect(node.index)}
             className="cursor-grab active:cursor-grabbing"
           >
+            <title>
+              {node.label} · {node.duration}
+              {node.unsorted ? ' · unsorted' : ''}
+            </title>
             <circle
               r={radius}
               className={node.unsorted ? 'fill-error/15 stroke-error' : 'fill-surface-container-high stroke-outline'}

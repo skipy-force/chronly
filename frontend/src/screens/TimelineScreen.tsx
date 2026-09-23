@@ -40,13 +40,19 @@ export function TimelineScreen() {
 
   return (
     <div className="flex h-full flex-col gap-4 p-6">
-      <div className="flex items-center gap-2">
-        <input
-          type="date"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-          className="rounded-pill bg-surface-container px-3 py-1.5 text-sm"
-        />
+      <div>
+        <div className="flex items-center gap-2">
+          <input
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            className="rounded-pill bg-surface-container px-3 py-1.5 text-sm"
+          />
+        </div>
+        <p className="mt-2 text-xs text-on-surface-variant">
+          Every dot is one tracked activity block for this day, connected in the order they happened. Drag a dot to
+          rearrange the view, hover for details, click to assign it to a project — red dots aren't assigned yet.
+        </p>
       </div>
 
       <div className="min-h-0 flex-1">
