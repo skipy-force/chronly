@@ -17,28 +17,39 @@ Full reasoning and data model are in
 
 ## Status
 
-Actively building the core engine, no UI yet. Current implementation plan:
+Core tracking engine, storage API, and tray are done. No real frontend yet —
+still the default Wails scaffold screen. Current implementation plan:
 `docs/superpowers/plans/2026-09-22-tracking-engine-core.md`.
 
 Done so far:
-- SQLite schema + store bootstrap
-- Hyprland window tracker (verified live against a real Hyprland session)
+- SQLite schema + store bootstrap, CRUD for projects/tasks
+- Hyprland window tracker (verified live)
+- Idle detection with fallback chain: Wayland `ext-idle-notify-v1` → raw
+  `/dev/input/event*` polling (mouse+keyboard) → user prompt to continue
+  window-only or quit
+- Aggregator, assignment resolver, activity persistence, Runner wiring
+  (Runner also respects the tracking-paused flag)
+- Wails API bindings exposing all of the above to the frontend
+- System tray: pause toggle, quick task switch, hide-on-close
 
 In progress:
-- Wayland idle detector (`ext-idle-notify-v1`) — connects and binds fine,
-  still chasing a broken-pipe bug on the actual idle-notification request
-- Aggregator, assignment resolver, activity persistence, runner wiring
+- Frontend (Tailwind/shadcn, Today/Timeline/Projects/Rules/Settings)
 
 ## Stack
 
-- Go 1.25 backend, split into `backend/tracker` (pure domain logic, no OS
-  deps except two platform-tagged files) and `backend/storage` (SQLite)
+- Go 1.25 backend, split into `backend/tracker` (pure domain logic, OS deps
+  isolated to platform-tagged files) and `backend/storage` (SQLite)
 - `modernc.org/sqlite` — pure Go driver, no CGO, so cross-compiling for
-  Windows/macOS later stays simple
+  Windows/macOS later stays simple. The tray (`github.com/energye/systray`)
+  is pure Go on Linux too — it talks the StatusNotifierItem/DBusMenu D-Bus
+  protocols directly instead of going through GTK, which matters because
+  Wails' own webview already runs a GTK main loop on Linux, and a second,
+  independent one (as `github.com/getlantern/systray` uses via
+  libappindicator) reliably aborts the process — confirmed by hand before
+  switching libraries.
 - Hyprland's own IPC socket for window tracking (not the generic
   `wlr-foreign-toplevel-management` protocol) — Linux/Hyprland only for now
-- Wails v2 for the eventual desktop shell + tray icon; React frontend comes
-  after the engine works end-to-end
+- Wails v2 for the desktop shell; React frontend still pending
 
 ## Running
 
@@ -46,5 +57,9 @@ In progress:
 wails dev    # live dev mode, hot reload
 wails build  # production build
 ```
+
+On Arch/CachyOS (and other distros that only ship `webkit2gtk-4.1`, not the
+older `4.0`), add `-tags webkit2_41` to both commands — Wails v2 looks for
+`webkit2gtk-4.0` by default and fails at the pkg-config step otherwise.
 
 Backend tests: `go test ./...`

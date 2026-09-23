@@ -3,6 +3,7 @@ module chronly
 go 1.25.0
 
 require (
+	github.com/energye/systray v1.0.3
 	github.com/rajveermalviya/go-wayland/wayland v0.0.0-20230130181619-0ad78d1310b2
 	github.com/wailsapp/wails/v2 v2.16.0
 	modernc.org/sqlite v1.59.0

@@ -11,6 +11,7 @@ import (
 	"chronly/backend/storage"
 	"chronly/backend/tracker"
 
+	"github.com/energye/systray"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
@@ -23,6 +24,7 @@ type App struct {
 	ctx    context.Context
 	store  *storage.Store
 	cancel context.CancelFunc
+	tray   *Tray
 }
 
 func NewApp() *App {
@@ -61,6 +63,9 @@ func (a *App) startup(ctx context.Context) {
 			log.Printf("runner stopped: %v", err)
 		}
 	}()
+
+	a.tray = newTray(a)
+	go a.tray.run()
 }
 
 func (a *App) shutdown(ctx context.Context) {
@@ -70,6 +75,12 @@ func (a *App) shutdown(ctx context.Context) {
 	if a.store != nil {
 		a.store.Close()
 	}
+	systray.Quit()
+}
+
+func (a *App) beforeClose(ctx context.Context) bool {
+	runtime.WindowHide(ctx)
+	return true
 }
 
 func (a *App) resolveIdleDetector(ctx context.Context) (tracker.IdleDetector, func() error) {
