@@ -94,3 +94,25 @@ export function hourlyMinutesForDay(blocks: Block[], dayKey: string): number[] {
   }
   return hours
 }
+
+export interface PeakHourRange {
+  startHour: number
+  endHour: number
+}
+
+export function computePeakHourRange(blocks: Block[]): PeakHourRange | null {
+  if (blocks.length === 0) return null
+  const totals = new Array(24).fill(0)
+  for (const b of blocks) {
+    totals[new Date(b.StartTime).getHours()] += blockMinutes(b)
+  }
+  const max = Math.max(...totals)
+  if (max <= 0) return null
+
+  const peakHour = totals.indexOf(max)
+  let start = peakHour
+  let end = peakHour
+  while (start > 0 && totals[start - 1] >= max * 0.5) start--
+  while (end < 23 && totals[end + 1] >= max * 0.5) end++
+  return { startHour: start, endHour: end }
+}

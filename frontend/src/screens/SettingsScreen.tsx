@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Droplet, ExternalLink, FolderOpen, RefreshCw, Upload, X } from 'lucide-react'
@@ -15,7 +15,7 @@ type Section = 'welcome' | 'general' | 'profile' | 'appearance' | 'tracking' | '
 const REPO_URL = 'https://github.com/skipy-force/chronly'
 
 const UI_SCALE_PRESETS = [90, 100, 110, 125, 150]
-const DEV_UNLOCK_TAPS = 6
+const DEV_UNLOCK_HOLD_MS = 1400
 
 const sectionVariants = fadeInVariants(0.35, 10)
 
@@ -192,41 +192,74 @@ function DevUnlockButton({
   setShowDeveloperSettings: (v: boolean) => void
 }) {
   const t = useT()
-  const [taps, setTaps] = useState(0)
+  const [holdProgress, setHoldProgress] = useState(0)
+  const rafRef = useRef<number | null>(null)
+  const startRef = useRef<number | null>(null)
+
+  const stopHold = () => {
+    if (rafRef.current !== null) {
+      cancelAnimationFrame(rafRef.current)
+      rafRef.current = null
+    }
+    startRef.current = null
+  }
+
+  useEffect(() => stopHold, [])
+
+  const tick = () => {
+    if (startRef.current === null) return
+    const elapsed = performance.now() - startRef.current
+    const progress = Math.min(1, elapsed / DEV_UNLOCK_HOLD_MS)
+    setHoldProgress(progress)
+    if (progress >= 1) {
+      setShowDeveloperSettings(true)
+      stopHold()
+      return
+    }
+    rafRef.current = requestAnimationFrame(tick)
+  }
+
+  const handlePointerDown = () => {
+    if (showDeveloperSettings) return
+    startRef.current = performance.now()
+    rafRef.current = requestAnimationFrame(tick)
+  }
+
+  const handlePointerUp = () => {
+    stopHold()
+    if (!showDeveloperSettings) setHoldProgress(0)
+  }
 
   const handleClick = () => {
     if (showDeveloperSettings) {
       setShowDeveloperSettings(false)
-      setTaps(0)
-      return
-    }
-    const next = taps + 1
-    if (next >= DEV_UNLOCK_TAPS) {
-      setShowDeveloperSettings(true)
-      setTaps(0)
-    } else {
-      setTaps(next)
+      setHoldProgress(0)
     }
   }
 
-  const fillRatio = showDeveloperSettings ? 1 : taps / DEV_UNLOCK_TAPS
+  const fillRatio = showDeveloperSettings ? 1 : holdProgress
 
   return (
     <button
+      onPointerDown={handlePointerDown}
+      onPointerUp={handlePointerUp}
+      onPointerLeave={handlePointerUp}
       onClick={handleClick}
-      className="relative flex h-12 w-full items-center justify-center overflow-hidden rounded-lg bg-surface-container text-sm"
+      className="relative flex h-12 w-full select-none items-center justify-center overflow-hidden rounded-lg bg-surface-container text-sm"
     >
       <motion.div
         className="absolute inset-x-0 bottom-0 bg-sky-500/40"
         initial={false}
         animate={{ height: `${fillRatio * 100}%` }}
-        transition={{ type: 'spring', bounce: 0.4, duration: 0.5 }}
+        transition={
+          holdProgress > 0 && !showDeveloperSettings
+            ? { duration: 0.05, ease: 'linear' }
+            : { type: 'spring', bounce: 0.4, duration: 0.5 }
+        }
       />
       <span className="relative z-10 flex items-center gap-2">
         <Droplet size={14} className={showDeveloperSettings ? 'text-sky-400' : 'text-on-surface-variant'} />
-        {showDeveloperSettings
-          ? t('settings.devUnlock.unlocked')
-          : t('settings.devUnlock.locked', { n: DEV_UNLOCK_TAPS - taps })}
+        {showDeveloperSettings ? t('settings.devUnlock.unlocked') : t('settings.devUnlock.locked')}
       </span>
     </button>
   )
@@ -294,35 +327,60 @@ function ProfileSection() {
 }
 
 function AppearanceSection() {
-  const { uiScale, setUiScale } = useUiStore()
+  const { uiScale, setUiScale, customAccentColor, setCustomAccentColor } = useUiStore()
   const t = useT()
 
   return (
-    <motion.section variants={sectionVariants}>
-      <h2 className="mb-2 text-sm font-semibold uppercase text-on-surface-variant">
-        {t('settings.appearance.uiScale')}
-      </h2>
-      <div className="flex gap-2">
-        {UI_SCALE_PRESETS.map((preset) => (
-          <button
-            key={preset}
-            onClick={() => setUiScale(preset)}
-            className={`relative rounded-pill px-4 py-1.5 text-sm ${
-              uiScale === preset ? 'text-surface' : 'bg-surface-container text-on-surface-variant'
-            }`}
-          >
-            {uiScale === preset && (
-              <motion.div
-                layoutId="ui-scale-pill"
-                className="absolute inset-0 rounded-pill bg-primary"
-                transition={{ type: 'spring', bounce: 0.25, duration: 0.4 }}
-              />
-            )}
-            <span className="relative">{preset}%</span>
-          </button>
-        ))}
-      </div>
-    </motion.section>
+    <div className="flex flex-col gap-6">
+      <motion.section variants={sectionVariants}>
+        <h2 className="mb-2 text-sm font-semibold uppercase text-on-surface-variant">
+          {t('settings.appearance.uiScale')}
+        </h2>
+        <div className="flex gap-2">
+          {UI_SCALE_PRESETS.map((preset) => (
+            <button
+              key={preset}
+              onClick={() => setUiScale(preset)}
+              className={`relative rounded-pill px-4 py-1.5 text-sm ${
+                uiScale === preset ? 'text-surface' : 'bg-surface-container text-on-surface-variant'
+              }`}
+            >
+              {uiScale === preset && (
+                <motion.div
+                  layoutId="ui-scale-pill"
+                  className="absolute inset-0 rounded-pill bg-primary"
+                  transition={{ type: 'spring', bounce: 0.25, duration: 0.4 }}
+                />
+              )}
+              <span className="relative">{preset}%</span>
+            </button>
+          ))}
+        </div>
+      </motion.section>
+
+      <motion.section variants={sectionVariants}>
+        <h2 className="mb-2 text-sm font-semibold uppercase text-on-surface-variant">
+          {t('settings.appearance.accentColor')}
+        </h2>
+        <div className="flex items-center gap-2">
+          <input
+            type="color"
+            value={customAccentColor || '#c4b5fd'}
+            onChange={(e) => setCustomAccentColor(e.target.value)}
+            className="h-9 w-9 cursor-pointer rounded border border-outline bg-transparent"
+          />
+          {customAccentColor && (
+            <button
+              onClick={() => setCustomAccentColor('')}
+              className="rounded-pill bg-surface-container px-3 py-1.5 text-sm hover:bg-surface-container-high"
+            >
+              {t('settings.appearance.resetToTheme')}
+            </button>
+          )}
+        </div>
+        <p className="mt-2 text-xs text-on-surface-variant">{t('settings.appearance.accentColorHint')}</p>
+      </motion.section>
+    </div>
   )
 }
 

@@ -19,7 +19,7 @@ const dict: Record<Lang, Record<string, string>> = {
     'welcome.viewOnGithub': 'View on GitHub',
 
     'settings.language': 'Language',
-    'settings.devUnlock.locked': 'Tap {n} more times to unlock developer mode',
+    'settings.devUnlock.locked': 'Press and hold to unlock developer mode',
     'settings.devUnlock.unlocked': 'Developer mode unlocked — tap to lock again',
 
     'settings.navStyle.title': 'Navigation style',
@@ -38,6 +38,9 @@ const dict: Record<Lang, Record<string, string>> = {
     'settings.profile.removeAvatar': 'Remove',
 
     'settings.appearance.uiScale': 'Interface size',
+    'settings.appearance.accentColor': 'Accent color',
+    'settings.appearance.accentColorHint': 'Overrides the wallpaper-driven (matugen) theme color everywhere.',
+    'settings.appearance.resetToTheme': 'Reset to theme color',
 
     'settings.tracking.afkThreshold': 'AFK threshold',
     'settings.tracking.afkThresholdDesc': 'minutes of inactivity before a block is split',
@@ -88,6 +91,8 @@ const dict: Record<Lang, Record<string, string>> = {
     'today.weeklyAverage': 'Weekly average',
     'today.selectedDay': 'Selected day',
     'today.idle': 'Idle',
+    'today.peakHours': 'Peak hours',
+    'today.notEnoughData': 'Not enough data',
     'today.apps': 'Apps',
     'today.noActivityYet': 'No activity yet',
     'today.paused': 'Paused',
@@ -133,6 +138,17 @@ const dict: Record<Lang, Record<string, string>> = {
     'rulesGraph.resetView': 'Reset view',
 
     'select.placeholder': 'Select',
+
+    'onboarding.today.desc': 'See your day at a glance — time tracked, weekly trends, month heatmap, and what apps you spent time on.',
+    'onboarding.timeline.desc':
+      'Every tracked activity for a day, chronologically or grouped by app. Tap any card to assign it to a project.',
+    'onboarding.projects.desc': 'Track time against project estimates, organize work into tasks, and see what needs attention.',
+    'onboarding.rules.desc':
+      'Set up patterns so new activity gets assigned to the right project automatically instead of piling up unsorted.',
+    'onboarding.settings.desc': 'Personalize chronly — theme, language, tracking behavior, and more.',
+    'onboarding.next': 'Next',
+    'onboarding.skip': 'Skip',
+    'onboarding.getStarted': 'Get started',
   },
   ru: {
     'nav.today': 'Сегодня',
@@ -152,7 +168,7 @@ const dict: Record<Lang, Record<string, string>> = {
     'welcome.viewOnGithub': 'Репозиторий на GitHub',
 
     'settings.language': 'Язык',
-    'settings.devUnlock.locked': 'Нажми ещё {n} раз, чтобы открыть режим разработчика',
+    'settings.devUnlock.locked': 'Зажми, чтобы открыть режим разработчика',
     'settings.devUnlock.unlocked': 'Режим разработчика открыт — нажми, чтобы закрыть',
 
     'settings.navStyle.title': 'Стиль навигации',
@@ -171,6 +187,9 @@ const dict: Record<Lang, Record<string, string>> = {
     'settings.profile.removeAvatar': 'Убрать',
 
     'settings.appearance.uiScale': 'Масштаб интерфейса',
+    'settings.appearance.accentColor': 'Цвет акцента',
+    'settings.appearance.accentColorHint': 'Переопределяет цвет темы, взятый из обоев (matugen), везде в приложении.',
+    'settings.appearance.resetToTheme': 'Сбросить к цвету темы',
 
     'settings.tracking.afkThreshold': 'Порог AFK',
     'settings.tracking.afkThresholdDesc': 'минут бездействия до разделения блока',
@@ -221,6 +240,8 @@ const dict: Record<Lang, Record<string, string>> = {
     'today.weeklyAverage': 'Среднее за неделю',
     'today.selectedDay': 'Выбранный день',
     'today.idle': 'Простой',
+    'today.peakHours': 'Часы пик',
+    'today.notEnoughData': 'Недостаточно данных',
     'today.apps': 'Приложения',
     'today.noActivityYet': 'Пока нет активности',
     'today.paused': 'На паузе',
@@ -266,6 +287,18 @@ const dict: Record<Lang, Record<string, string>> = {
     'rulesGraph.resetView': 'Сбросить вид',
 
     'select.placeholder': 'Выбрать',
+
+    'onboarding.today.desc':
+      'Твой день целиком: отслеженное время, недельные тренды, тепловая карта месяца и на что уходило время.',
+    'onboarding.timeline.desc':
+      'Каждый отслеженный отрезок активности за день — по времени или сгруппированный по приложениям. Нажми на карточку, чтобы назначить проект.',
+    'onboarding.projects.desc': 'Отслеживай время по проектам относительно оценки, организуй работу в задачи.',
+    'onboarding.rules.desc':
+      'Настрой правила, чтобы новая активность автоматически назначалась нужному проекту, а не копилась неразобранной.',
+    'onboarding.settings.desc': 'Настрой chronly под себя — тема, язык, поведение трекинга и многое другое.',
+    'onboarding.next': 'Далее',
+    'onboarding.skip': 'Пропустить',
+    'onboarding.getStarted': 'Начать',
   },
 }
 

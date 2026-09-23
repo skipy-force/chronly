@@ -22,6 +22,7 @@ import {
   buildMonthGrid,
   buildWeekMinutes,
   weeklyAverageMinutes,
+  computePeakHourRange,
 } from '../lib/aggregation'
 
 function endOfDay(d: Date): Date {
@@ -108,6 +109,8 @@ export function TodayScreen() {
       .sort((a, b) => b.minutes - a.minutes)
   }, [selectedDayBlocks])
 
+  const peakHourRange = useMemo(() => computePeakHourRange(blocks), [blocks])
+
   const lastBlock = selectedDayBlocks[selectedDayBlocks.length - 1]
   const tracking = !appState?.TrackingPaused
 
@@ -171,13 +174,21 @@ export function TodayScreen() {
           exit={{ opacity: 0, y: -10, transition: { duration: 0.2, ease: 'easeIn' } }}
           variants={staggerContainer(0.06)}
         >
-          <motion.div variants={sectionVariants} className="grid grid-cols-3 gap-4">
+          <motion.div variants={sectionVariants} className="grid grid-cols-4 gap-4">
             <StatCard label={t('today.weeklyAverage')} value={formatHoursMinutes(weeklyAverage)} />
             <StatCard
               label={isViewingToday ? t('nav.today') : t('today.selectedDay')}
               value={formatHoursMinutes(selectedTotalMinutes)}
             />
             <StatCard label={t('today.idle')} value={formatHoursMinutes(idleSelectedMinutes)} />
+            <StatCard
+              label={t('today.peakHours')}
+              value={
+                peakHourRange
+                  ? `${String(peakHourRange.startHour).padStart(2, '0')}:00–${String(peakHourRange.endHour + 1).padStart(2, '0')}:00`
+                  : t('today.notEnoughData')
+              }
+            />
           </motion.div>
 
           <motion.div variants={sectionVariants} className="grid grid-cols-2 gap-4">

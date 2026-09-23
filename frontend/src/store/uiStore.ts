@@ -23,6 +23,10 @@ interface UiState {
   setLanguage: (lang: Lang) => void
   showDeveloperSettings: boolean
   setShowDeveloperSettings: (show: boolean) => void
+  customAccentColor: string
+  setCustomAccentColor: (color: string) => void
+  hasSeenOnboarding: boolean
+  setHasSeenOnboarding: (seen: boolean) => void
 }
 
 export const useUiStore = create<UiState>()(
@@ -44,6 +48,10 @@ export const useUiStore = create<UiState>()(
       setLanguage: (lang) => set({ language: lang }),
       showDeveloperSettings: false,
       setShowDeveloperSettings: (show) => set({ showDeveloperSettings: show }),
+      customAccentColor: '',
+      setCustomAccentColor: (color) => set({ customAccentColor: color }),
+      hasSeenOnboarding: false,
+      setHasSeenOnboarding: (seen) => set({ hasSeenOnboarding: seen }),
     }),
     { name: 'chronly-ui' },
   ),

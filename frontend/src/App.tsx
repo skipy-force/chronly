@@ -5,6 +5,7 @@ import { installMatugenTheme } from './lib/theme'
 import { useQueryEvents } from './lib/api'
 import { Shell } from './components/shells'
 import { ErrorBoundary } from './components/ErrorBoundary'
+import { OnboardingModal } from './components/OnboardingModal'
 import { useUiStore } from './store/uiStore'
 import { TodayScreen } from './screens/TodayScreen'
 import { TimelineScreen } from './screens/TimelineScreen'
@@ -47,13 +48,26 @@ function useUiScale() {
   }, [uiScale])
 }
 
+function useCustomAccentColor() {
+  const customAccentColor = useUiStore((s) => s.customAccentColor)
+  useEffect(() => {
+    if (customAccentColor) {
+      document.documentElement.style.setProperty('--color-primary', customAccentColor)
+    } else {
+      document.documentElement.style.removeProperty('--color-primary')
+    }
+  }, [customAccentColor])
+}
+
 export default function App() {
   useEffect(() => installMatugenTheme(), [])
   useUiScale()
+  useCustomAccentColor()
 
   return (
     <QueryClientProvider client={queryClient}>
       <AppShell />
+      <OnboardingModal />
     </QueryClientProvider>
   )
 }
