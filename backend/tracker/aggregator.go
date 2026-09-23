@@ -46,7 +46,7 @@ func (a *Aggregator) Add(s Sample) (closed Block, ok bool) {
 		return Block{}, false
 	}
 
-	if a.open.AppName != s.Window.AppName || a.open.WindowTitle != s.Window.WindowTitle {
+	if a.open.AppName != s.Window.AppName {
 		closed, ok = a.closeOpen()
 		a.open = &Block{
 			StartTime:   s.At,
@@ -58,6 +58,7 @@ func (a *Aggregator) Add(s Sample) (closed Block, ok bool) {
 	}
 
 	a.open.EndTime = s.At
+	a.open.WindowTitle = s.Window.WindowTitle
 	return Block{}, false
 }
 

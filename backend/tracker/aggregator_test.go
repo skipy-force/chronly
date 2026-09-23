@@ -21,6 +21,32 @@ func TestAggregator_MergesConsecutiveSameWindow(t *testing.T) {
 	}
 }
 
+func TestAggregator_MergesAcrossWindowTitleChangesWithinSameApp(t *testing.T) {
+	agg := NewAggregator(3 * time.Minute)
+
+	if _, ok := agg.Add(Sample{Window: WindowInfo{AppName: "kitty", WindowTitle: "~/a"}, At: t0(0)}); ok {
+		t.Fatal("first sample should not close a block")
+	}
+	if _, ok := agg.Add(Sample{Window: WindowInfo{AppName: "kitty", WindowTitle: "~/b"}, At: t0(1)}); ok {
+		t.Fatal("a window title change within the same app should not close the block")
+	}
+	closed, ok := agg.Add(Sample{Window: WindowInfo{AppName: "kitty", WindowTitle: "~/c"}, At: t0(2)})
+	if ok {
+		t.Fatalf("same app across title changes should still be one open block, got closed=%+v", closed)
+	}
+
+	final, ok := agg.CloseOpen()
+	if !ok {
+		t.Fatal("CloseOpen should close the accumulated block")
+	}
+	if final.StartTime != t0(0) || final.EndTime != t0(2) {
+		t.Fatalf("expected one block spanning t0(0)..t0(2), got %+v", final)
+	}
+	if final.WindowTitle != "~/c" {
+		t.Fatalf("expected block to keep the latest window title, got %q", final.WindowTitle)
+	}
+}
+
 func TestAggregator_ClosesOnWindowChange(t *testing.T) {
 	agg := NewAggregator(3 * time.Minute)
 	a := WindowInfo{AppName: "code", WindowTitle: "main.go"}

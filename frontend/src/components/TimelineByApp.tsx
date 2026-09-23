@@ -20,7 +20,7 @@ export function TimelineByApp({ blocks }: TimelineByAppProps) {
     const appName = block.AppName || 'Unknown'
     const start = new Date(block.StartTime)
     const end = new Date(block.EndTime)
-    const minutes = Math.max(1, (end.getTime() - start.getTime()) / 60000)
+    const minutes = Math.max(0, (end.getTime() - start.getTime()) / 60000)
     const existing = groups.get(appName)
     if (existing) {
       existing.totalMinutes += minutes
