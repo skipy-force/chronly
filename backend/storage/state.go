@@ -17,3 +17,13 @@ func (s *Store) GetAppState() (tracker.AppState, error) {
 	st.TrackingPaused = paused != 0
 	return st, nil
 }
+
+func (s *Store) SetCurrentTask(taskID *int64) error {
+	_, err := s.db.Exec(`UPDATE app_state SET current_task_id = ? WHERE id = 1`, taskID)
+	return err
+}
+
+func (s *Store) SetTrackingPaused(paused bool) error {
+	_, err := s.db.Exec(`UPDATE app_state SET tracking_paused = ? WHERE id = 1`, paused)
+	return err
+}
