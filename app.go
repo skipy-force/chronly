@@ -20,7 +20,7 @@ import (
 const (
 	afkThreshold          = 3 * time.Minute
 	waylandIdleMillis     = 60000
-	AppVersion            = "0.1.0-alpha"
+	AppVersion            = "0.1.1-alpha"
 	compactionCutoffDelay = 15 * time.Minute
 	compactionInterval    = 6 * time.Hour
 )
