@@ -2,10 +2,13 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '../lib/api'
 import { queryKeys } from '../lib/queryClient'
-import { BlockChain } from '../components/BlockChain'
+import { TimelineGraph } from '../components/TimelineGraph'
 
 function isoDateInput(d: Date): string {
-  return d.toISOString().slice(0, 10)
+  const year = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
 }
 
 export function TimelineScreen() {
@@ -46,7 +49,7 @@ export function TimelineScreen() {
         />
       </div>
 
-      <BlockChain
+      <TimelineGraph
         blocks={blocks}
         durationLabel={(block) => {
           const durationMs = new Date(block.EndTime).getTime() - new Date(block.StartTime).getTime()
