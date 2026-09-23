@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '../lib/api'
 import { queryKeys } from '../lib/queryClient'
-import { TimelineGraph } from '../components/TimelineGraph'
+import { TimelineBar } from '../components/TimelineBar'
 
 function isoDateInput(d: Date): string {
   const year = d.getFullYear()
@@ -50,20 +50,13 @@ export function TimelineScreen() {
           />
         </div>
         <p className="mt-2 text-xs text-on-surface-variant">
-          Every dot is one tracked activity block for this day, connected in the order they happened. Drag a dot to
-          rearrange the view, hover for details, click to assign it to a project — red dots aren't assigned yet.
+          Each bar is one tracked activity block, positioned by actual time of day. Click a bar to assign it to a
+          project — red bars aren't assigned yet.
         </p>
       </div>
 
       <div className="min-h-0 flex-1">
-        <TimelineGraph
-          blocks={blocks}
-          durationLabel={(block) => {
-            const durationMs = new Date(block.EndTime).getTime() - new Date(block.StartTime).getTime()
-            return `${Math.round(durationMs / 60000)}m`
-          }}
-          onSelect={(index) => setAssigningIndex(index)}
-        />
+        <TimelineBar blocks={blocks} dayStartIso={start} onSelect={(index) => setAssigningIndex(index)} />
       </div>
 
       {assigningIndex !== null && (
