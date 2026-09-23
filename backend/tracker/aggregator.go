@@ -54,6 +54,10 @@ func (a *Aggregator) Add(s Sample) (closed Block, ok bool) {
 	return Block{}, false
 }
 
+func (a *Aggregator) CloseOpen() (Block, bool) {
+	return a.closeOpen()
+}
+
 func (a *Aggregator) closeOpen() (Block, bool) {
 	if a.open == nil {
 		return Block{}, false

@@ -67,16 +67,23 @@ func (r *Runner) Run(ctx context.Context) error {
 }
 
 func (r *Runner) process(s Sample) error {
-	block, ok := r.aggregator.Add(s)
+	state, err := r.state.GetAppState()
+	if err != nil {
+		return err
+	}
+
+	var block Block
+	var ok bool
+	if state.TrackingPaused {
+		block, ok = r.aggregator.CloseOpen()
+	} else {
+		block, ok = r.aggregator.Add(s)
+	}
 	if !ok {
 		return nil
 	}
 
 	rules, err := r.rules.ListAssignmentRulesByPriority()
-	if err != nil {
-		return err
-	}
-	state, err := r.state.GetAppState()
 	if err != nil {
 		return err
 	}

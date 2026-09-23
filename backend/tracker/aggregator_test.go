@@ -57,3 +57,31 @@ func TestAggregator_ClosesOnAFK(t *testing.T) {
 		t.Fatal("first sample after AFK should not immediately close anything")
 	}
 }
+
+func TestAggregator_CloseOpen(t *testing.T) {
+	agg := NewAggregator(3 * time.Minute)
+	win := WindowInfo{AppName: "code", WindowTitle: "main.go"}
+
+	if _, ok := agg.CloseOpen(); ok {
+		t.Fatal("CloseOpen with nothing open should report false")
+	}
+
+	agg.Add(Sample{Window: win, At: t0(0)})
+	agg.Add(Sample{Window: win, At: t0(60)})
+
+	closed, ok := agg.CloseOpen()
+	if !ok {
+		t.Fatal("CloseOpen should close the open block")
+	}
+	if closed.StartTime != t0(0) || closed.EndTime != t0(60) {
+		t.Fatalf("unexpected closed block: %+v", closed)
+	}
+
+	if _, ok := agg.CloseOpen(); ok {
+		t.Fatal("second CloseOpen with nothing open should report false")
+	}
+
+	if _, ok := agg.Add(Sample{Window: win, At: t0(300)}); ok {
+		t.Fatal("sample right after CloseOpen should start a fresh block, not close one")
+	}
+}
