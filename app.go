@@ -20,7 +20,7 @@ import (
 const (
 	afkThreshold      = 3 * time.Minute
 	waylandIdleMillis = 60000
-	AppVersion        = "0.1.0-dev"
+	AppVersion        = "0.1.0-alpha"
 )
 
 var openFileManager = func(dir string) error {
