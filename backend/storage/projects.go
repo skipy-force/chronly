@@ -42,7 +42,7 @@ func queryProjects(s *Store, query string) ([]tracker.Project, error) {
 	}
 	defer rows.Close()
 
-	var projects []tracker.Project
+	projects := []tracker.Project{}
 	for rows.Next() {
 		var p tracker.Project
 		var archived int

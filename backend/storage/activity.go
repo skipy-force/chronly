@@ -11,7 +11,7 @@ func (s *Store) SaveActivityBlock(b tracker.Block, a tracker.Assignment) (int64,
 	res, err := s.db.Exec(
 		`INSERT INTO activity_blocks (start_time, end_time, app_name, window_title, task_id, project_id, assigned_by)
 		 VALUES (?, ?, ?, ?, ?, ?, ?)`,
-		b.StartTime, b.EndTime, b.AppName, b.WindowTitle, a.TaskID, a.ProjectID, a.AssignedBy,
+		b.StartTime.UTC(), b.EndTime.UTC(), b.AppName, b.WindowTitle, a.TaskID, a.ProjectID, a.AssignedBy,
 	)
 	if err != nil {
 		return 0, err
@@ -25,14 +25,14 @@ func (s *Store) ListActivityBlocksForRange(start, end time.Time) ([]tracker.Bloc
 		 FROM activity_blocks
 		 WHERE start_time >= ? AND start_time < ?
 		 ORDER BY start_time ASC`,
-		start, end,
+		start.UTC(), end.UTC(),
 	)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	var blocks []tracker.Block
+	blocks := []tracker.Block{}
 	for rows.Next() {
 		var b tracker.Block
 		if err := rows.Scan(&b.ID, &b.StartTime, &b.EndTime, &b.AppName, &b.WindowTitle, &b.TaskID, &b.ProjectID); err != nil {
@@ -71,6 +71,7 @@ func (s *Store) SplitActivityBlock(id int64, splitAt time.Time) (int64, error) {
 		return 0, err
 	}
 
+	splitAt = splitAt.UTC()
 	if !splitAt.After(startTime) || !splitAt.Before(endTime) {
 		return 0, errors.New("split point must be strictly inside the block's time range")
 	}

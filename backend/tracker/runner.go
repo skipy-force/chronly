@@ -56,11 +56,11 @@ func (r *Runner) Run(ctx context.Context) error {
 		case err := <-trackerErr:
 			return err
 		case last = <-updates:
-			if err := r.process(Sample{Window: last, Idle: r.idle.IdleDuration(), At: time.Now()}); err != nil {
+			if err := r.process(Sample{Window: last, Idle: r.idle.IdleDuration(), At: time.Now().UTC()}); err != nil {
 				return err
 			}
 		case <-ticker.C:
-			if err := r.process(Sample{Window: last, Idle: r.idle.IdleDuration(), At: time.Now()}); err != nil {
+			if err := r.process(Sample{Window: last, Idle: r.idle.IdleDuration(), At: time.Now().UTC()}); err != nil {
 				return err
 			}
 		}

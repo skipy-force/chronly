@@ -12,7 +12,7 @@ func (s *Store) ListAssignmentRulesByPriority() ([]tracker.Rule, error) {
 	}
 	defer rows.Close()
 
-	var rules []tracker.Rule
+	rules := []tracker.Rule{}
 	for rows.Next() {
 		var r tracker.Rule
 		if err := rows.Scan(&r.ID, &r.PatternType, &r.Pattern, &r.ProjectID, &r.TaskID, &r.Priority); err != nil {

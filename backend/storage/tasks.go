@@ -48,7 +48,7 @@ func queryTasksByProjectAndStatus(s *Store, projectID int64, status string) ([]t
 	}
 	defer rows.Close()
 
-	var tasks []tracker.Task
+	tasks := []tracker.Task{}
 	for rows.Next() {
 		var t tracker.Task
 		if err := rows.Scan(&t.ID, &t.ProjectID, &t.Name, &t.EstimateMinutes, &t.Status, &t.CreatedAt); err != nil {

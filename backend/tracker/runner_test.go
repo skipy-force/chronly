@@ -79,6 +79,9 @@ func TestRunner_PersistsClosedBlockOnWindowChange(t *testing.T) {
 	if sink.saved[0].AppName != "code" {
 		t.Fatalf("expected first block to be 'code', got %+v", sink.saved[0])
 	}
+	if sink.saved[0].StartTime.Location() != time.UTC {
+		t.Fatalf("expected block times to be normalized to UTC, got location %v", sink.saved[0].StartTime.Location())
+	}
 }
 
 func TestRunner_PauseClosesOpenBlockAndSkipsAggregation(t *testing.T) {

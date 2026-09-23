@@ -56,6 +56,32 @@ func TestSaveActivityBlock_PersistsFields(t *testing.T) {
 	}
 }
 
+func TestListActivityBlocksForRange_NonUTCSaveMatchesUTCQuery(t *testing.T) {
+	s := newTestStore(t)
+	moscow := time.FixedZone("MSK", 3*60*60)
+	// 00:30 MSK on Jan 2 is 21:30 UTC on Jan 1 — a different calendar day in
+	// each zone. A query for the UTC day "Jan 1" must still find it, even
+	// though its local-zone wall-clock date is "Jan 2".
+	localStart := time.Date(2026, 1, 2, 0, 30, 0, 0, moscow)
+
+	if _, err := s.SaveActivityBlock(
+		tracker.Block{StartTime: localStart, EndTime: localStart.Add(time.Minute), AppName: "code", WindowTitle: "x"},
+		tracker.Assignment{},
+	); err != nil {
+		t.Fatal(err)
+	}
+
+	rangeStart := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
+	rangeEnd := time.Date(2026, 1, 2, 0, 0, 0, 0, time.UTC)
+	blocks, err := s.ListActivityBlocksForRange(rangeStart, rangeEnd)
+	if err != nil {
+		t.Fatalf("ListActivityBlocksForRange: %v", err)
+	}
+	if len(blocks) != 1 {
+		t.Fatalf("expected the MSK-saved block (21:30 UTC Jan 1) to be found by a Jan-1-UTC query, got %d blocks: %+v", len(blocks), blocks)
+	}
+}
+
 func TestListActivityBlocksForRange_FiltersByStartTime(t *testing.T) {
 	s := newTestStore(t)
 	in := time.Date(2026, 1, 2, 10, 0, 0, 0, time.UTC)
