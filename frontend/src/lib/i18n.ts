@@ -8,11 +8,15 @@ const dict: Record<Lang, Record<string, string>> = {
     'nav.rules': 'Rules',
     'nav.settings': 'Settings',
 
+    'settings.section.welcome': 'Welcome',
     'settings.section.general': 'General',
     'settings.section.profile': 'Profile',
     'settings.section.appearance': 'Appearance',
     'settings.section.tracking': 'Tracking',
     'settings.section.developer': 'Developer',
+
+    'welcome.by': 'by',
+    'welcome.viewOnGithub': 'View on GitHub',
 
     'settings.language': 'Language',
     'settings.showDeveloperSettings': 'Show developer settings',
@@ -133,11 +137,15 @@ const dict: Record<Lang, Record<string, string>> = {
     'nav.rules': 'Правила',
     'nav.settings': 'Настройки',
 
+    'settings.section.welcome': 'Добро пожаловать',
     'settings.section.general': 'Общие',
     'settings.section.profile': 'Профиль',
     'settings.section.appearance': 'Внешний вид',
     'settings.section.tracking': 'Трекинг',
     'settings.section.developer': 'Разработчик',
+
+    'welcome.by': 'от',
+    'welcome.viewOnGithub': 'Репозиторий на GitHub',
 
     'settings.language': 'Язык',
     'settings.showDeveloperSettings': 'Показывать настройки разработчика',

@@ -1,15 +1,18 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { FolderOpen, Upload, X } from 'lucide-react'
+import { ExternalLink, FolderOpen, Upload, X } from 'lucide-react'
 import { api } from '../lib/api'
 import { queryKeys } from '../lib/queryClient'
 import { useUiStore, type NavStyle, type Lang } from '../store/uiStore'
 import { useT } from '../lib/i18n'
 import { fadeInVariants, staggerContainer } from '../lib/motion'
 import { Avatar } from '../components/Avatar'
+import chronlyLogo from '../assets/images/icon.svg'
 
-type Section = 'general' | 'profile' | 'appearance' | 'tracking' | 'developer'
+type Section = 'welcome' | 'general' | 'profile' | 'appearance' | 'tracking' | 'developer'
+
+const REPO_URL = 'https://github.com/skipy-force/chronly'
 
 const UI_SCALE_PRESETS = [90, 100, 110, 125, 150]
 
@@ -25,9 +28,10 @@ export function SettingsScreen() {
   const { showDeveloperSettings } = useUiStore()
   const t = useT()
 
-  const [activeSection, setActiveSection] = useState<Section>('general')
+  const [activeSection, setActiveSection] = useState<Section>('welcome')
 
   const sections: { id: Section; labelKey: string }[] = [
+    { id: 'welcome', labelKey: 'settings.section.welcome' },
     { id: 'general', labelKey: 'settings.section.general' },
     { id: 'profile', labelKey: 'settings.section.profile' },
     { id: 'appearance', labelKey: 'settings.section.appearance' },
@@ -69,6 +73,7 @@ export function SettingsScreen() {
         animate="show"
         variants={staggerContainer(0.06)}
       >
+        {activeSection === 'welcome' && <WelcomeSection />}
         {activeSection === 'general' && <GeneralSection />}
         {activeSection === 'profile' && <ProfileSection />}
         {activeSection === 'appearance' && <AppearanceSection />}
@@ -76,6 +81,40 @@ export function SettingsScreen() {
         {activeSection === 'developer' && showDeveloperSettings && <DeveloperSection />}
       </motion.div>
     </div>
+  )
+}
+
+function WelcomeSection() {
+  const t = useT()
+  const { data: appVersion } = useQuery({
+    queryKey: ['appVersion'],
+    queryFn: api.getAppVersion,
+  })
+
+  return (
+    <motion.section
+      variants={sectionVariants}
+      className="flex h-full flex-col items-center justify-center gap-4 text-center"
+    >
+      <img src={chronlyLogo} alt="chronly" className="h-32 w-32" />
+      <div>
+        <p className="text-2xl font-semibold">
+          chronly <span className="text-base font-normal text-on-surface-variant">v{appVersion ?? '…'}</span>
+        </p>
+        <p className="text-sm text-on-surface-variant">
+          {t('welcome.by')} <span className="font-medium text-on-surface">skipy-force</span>
+        </p>
+      </div>
+      <a
+        href={REPO_URL}
+        target="_blank"
+        rel="noreferrer"
+        className="flex items-center gap-2 rounded-pill bg-surface-container px-4 py-2 text-sm hover:bg-surface-container-high"
+      >
+        <ExternalLink size={14} />
+        {t('welcome.viewOnGithub')}
+      </a>
+    </motion.section>
   )
 }
 
