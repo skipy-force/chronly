@@ -21,7 +21,7 @@ func (s *Store) SaveActivityBlock(b tracker.Block, a tracker.Assignment) (int64,
 
 func (s *Store) ListActivityBlocksForRange(start, end time.Time) ([]tracker.Block, error) {
 	rows, err := s.db.Query(
-		`SELECT start_time, end_time, app_name, window_title, task_id, project_id
+		`SELECT id, start_time, end_time, app_name, window_title, task_id, project_id
 		 FROM activity_blocks
 		 WHERE start_time >= ? AND start_time < ?
 		 ORDER BY start_time ASC`,
@@ -35,8 +35,7 @@ func (s *Store) ListActivityBlocksForRange(start, end time.Time) ([]tracker.Bloc
 	var blocks []tracker.Block
 	for rows.Next() {
 		var b tracker.Block
-		var taskID, projectID *int64
-		if err := rows.Scan(&b.StartTime, &b.EndTime, &b.AppName, &b.WindowTitle, &taskID, &projectID); err != nil {
+		if err := rows.Scan(&b.ID, &b.StartTime, &b.EndTime, &b.AppName, &b.WindowTitle, &b.TaskID, &b.ProjectID); err != nil {
 			return nil, err
 		}
 		blocks = append(blocks, b)

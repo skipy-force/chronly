@@ -82,6 +82,49 @@ func TestListActivityBlocksForRange_FiltersByStartTime(t *testing.T) {
 	}
 }
 
+func TestListActivityBlocksForRange_IncludesIDAndAssignment(t *testing.T) {
+	s := newTestStore(t)
+	if _, err := s.db.Exec(`INSERT INTO projects (id, name) VALUES (1, 'a')`); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := s.db.Exec(`INSERT INTO tasks (id, project_id, name) VALUES (10, 1, 't')`); err != nil {
+		t.Fatal(err)
+	}
+
+	start := time.Date(2026, 1, 1, 12, 0, 0, 0, time.UTC)
+	unassignedID, err := s.SaveActivityBlock(
+		tracker.Block{StartTime: start, EndTime: start.Add(time.Minute), AppName: "code", WindowTitle: "x"},
+		tracker.Assignment{},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	taskID := int64(10)
+	projectID := int64(1)
+	assignedBy := "manual"
+	assignedID, err := s.SaveActivityBlock(
+		tracker.Block{StartTime: start.Add(time.Hour), EndTime: start.Add(time.Hour + time.Minute), AppName: "firefox", WindowTitle: "y"},
+		tracker.Assignment{TaskID: &taskID, ProjectID: &projectID, AssignedBy: &assignedBy},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	blocks, err := s.ListActivityBlocksForRange(start, start.Add(2*time.Hour))
+	if err != nil {
+		t.Fatalf("ListActivityBlocksForRange: %v", err)
+	}
+	if len(blocks) != 2 {
+		t.Fatalf("expected 2 blocks, got %+v", blocks)
+	}
+	if blocks[0].ID != unassignedID || blocks[0].TaskID != nil {
+		t.Fatalf("expected first block id=%d with no task, got id=%d taskID=%v", unassignedID, blocks[0].ID, blocks[0].TaskID)
+	}
+	if blocks[1].ID != assignedID || blocks[1].TaskID == nil || *blocks[1].TaskID != 10 || blocks[1].ProjectID == nil || *blocks[1].ProjectID != 1 {
+		t.Fatalf("expected second block id=%d with task=10 project=1, got %+v", assignedID, blocks[1])
+	}
+}
+
 func TestUpdateActivityBlockAssignment_SetsTaskAndProject(t *testing.T) {
 	s := newTestStore(t)
 	if _, err := s.db.Exec(`INSERT INTO projects (id, name) VALUES (1, 'a')`); err != nil {

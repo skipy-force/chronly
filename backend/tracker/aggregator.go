@@ -9,10 +9,13 @@ type Sample struct {
 }
 
 type Block struct {
+	ID          int64
 	StartTime   time.Time
 	EndTime     time.Time
 	AppName     string
 	WindowTitle string
+	TaskID      *int64
+	ProjectID   *int64
 }
 
 type Aggregator struct {

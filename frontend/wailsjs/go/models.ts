@@ -34,10 +34,13 @@ export namespace tracker {
 	    }
 	}
 	export class Block {
+	    ID: number;
 	    StartTime: time.Time;
 	    EndTime: time.Time;
 	    AppName: string;
 	    WindowTitle: string;
+	    TaskID?: number;
+	    ProjectID?: number;
 	
 	    static createFrom(source: any = {}) {
 	        return new Block(source);
@@ -45,10 +48,13 @@ export namespace tracker {
 	
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.ID = source["ID"];
 	        this.StartTime = this.convertValues(source["StartTime"], time.Time);
 	        this.EndTime = this.convertValues(source["EndTime"], time.Time);
 	        this.AppName = source["AppName"];
 	        this.WindowTitle = source["WindowTitle"];
+	        this.TaskID = source["TaskID"];
+	        this.ProjectID = source["ProjectID"];
 	    }
 	
 		convertValues(a: any, classs: any, asMap: boolean = false): any {
