@@ -28,6 +28,12 @@ export function daysInMonth(d: Date): number {
   return new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate()
 }
 
+export function formatClockTime(d: Date): string {
+  const h = String(d.getHours()).padStart(2, '0')
+  const m = String(d.getMinutes()).padStart(2, '0')
+  return `${h}:${m}`
+}
+
 export function formatHoursMinutes(totalMinutes: number): string {
   const h = Math.floor(totalMinutes / 60)
   const m = Math.round(totalMinutes % 60)

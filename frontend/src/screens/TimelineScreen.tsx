@@ -3,9 +3,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { api } from '../lib/api'
 import { queryKeys } from '../lib/queryClient'
-import { TimelineBar } from '../components/TimelineBar'
+import { TimelineList } from '../components/TimelineList'
 import { DatePicker } from '../components/DatePicker'
-import { localDateKey } from '../lib/dates'
+import { localDateKey, formatHoursMinutes } from '../lib/dates'
 
 function addDays(dateStr: string, delta: number): string {
   const d = new Date(dateStr + 'T00:00:00')
@@ -40,9 +40,14 @@ export function TimelineScreen() {
     },
   })
 
+  const totalMinutes = blocks.reduce(
+    (sum, b) => sum + (new Date(b.EndTime).getTime() - new Date(b.StartTime).getTime()) / 60000,
+    0,
+  )
+
   return (
-    <div className="flex h-full flex-col gap-4 p-6">
-      <div>
+    <div className="flex h-full flex-col gap-4 overflow-y-auto p-6">
+      <div className="flex items-center justify-between">
         <div className="flex items-center gap-1">
           <button
             onClick={() => setDate((d) => addDays(d, -1))}
@@ -58,13 +63,17 @@ export function TimelineScreen() {
             <ChevronRight size={16} />
           </button>
         </div>
-        <p className="mt-2 text-xs text-on-surface-variant">
-          Each bar is one tracked activity block, positioned by actual time of day. Click a bar to assign it to a
-          project — red bars aren't assigned yet.
+        <p className="text-sm text-on-surface-variant">
+          Total: <span className="font-semibold text-on-surface">{formatHoursMinutes(totalMinutes)}</span>
         </p>
       </div>
 
-      <TimelineBar blocks={blocks} dayStartIso={start} onSelect={(index) => setAssigningIndex(index)} />
+      <p className="text-xs text-on-surface-variant">
+        Every card below is one tracked activity. Tap a card to assign it to a project — a red card isn't assigned
+        yet.
+      </p>
+
+      <TimelineList blocks={blocks} onSelect={(index) => setAssigningIndex(index)} />
 
       {assigningIndex !== null && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/50">

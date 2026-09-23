@@ -107,6 +107,29 @@ body {
   color: var(--color-on-surface);
 }
 
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-outline) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: var(--color-outline);
+  border-radius: 9999px;
+}
+
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
 .dark {
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
