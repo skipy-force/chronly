@@ -11,9 +11,10 @@ interface AppBreakdownEntry {
 
 interface AppBreakdownListProps {
   entries: AppBreakdownEntry[]
+  onSelectApp?: (appName: string) => void
 }
 
-export const AppBreakdownList = memo(function AppBreakdownList({ entries }: AppBreakdownListProps) {
+export const AppBreakdownList = memo(function AppBreakdownList({ entries, onSelectApp }: AppBreakdownListProps) {
   const max = Math.max(1, ...entries.map((e) => e.minutes))
 
   if (entries.length === 0) {
@@ -27,7 +28,13 @@ export const AppBreakdownList = memo(function AppBreakdownList({ entries }: AppB
   return (
     <div className="flex flex-col gap-2">
       {entries.map((entry, i) => (
-        <div key={entry.appName} className="flex items-center gap-3 rounded-lg bg-surface-container p-3">
+        <button
+          key={entry.appName}
+          onClick={() => onSelectApp?.(entry.appName)}
+          className={`flex items-center gap-3 rounded-lg bg-surface-container p-3 text-left ${
+            onSelectApp ? 'hover:bg-surface-container-high' : ''
+          }`}
+        >
           <AppIconBadge appName={entry.appName} />
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-medium">{prettyAppName(entry.appName)}</p>
@@ -43,7 +50,7 @@ export const AppBreakdownList = memo(function AppBreakdownList({ entries }: AppB
           <span className="shrink-0 font-mono text-sm text-on-surface-variant">
             {formatHoursMinutes(entry.minutes)}
           </span>
-        </div>
+        </button>
       ))}
     </div>
   )
