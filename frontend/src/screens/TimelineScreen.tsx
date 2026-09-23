@@ -4,8 +4,11 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { api } from '../lib/api'
 import { queryKeys } from '../lib/queryClient'
 import { TimelineList } from '../components/TimelineList'
+import { TimelineByApp } from '../components/TimelineByApp'
 import { DatePicker } from '../components/DatePicker'
 import { localDateKey, formatHoursMinutes } from '../lib/dates'
+
+type View = 'time' | 'app'
 
 function addDays(dateStr: string, delta: number): string {
   const d = new Date(dateStr + 'T00:00:00')
@@ -15,6 +18,7 @@ function addDays(dateStr: string, delta: number): string {
 
 export function TimelineScreen() {
   const [date, setDate] = useState(() => localDateKey(new Date()))
+  const [view, setView] = useState<View>('time')
   const queryClient = useQueryClient()
 
   const start = new Date(date + 'T00:00:00').toISOString()
@@ -68,12 +72,32 @@ export function TimelineScreen() {
         </p>
       </div>
 
-      <p className="text-xs text-on-surface-variant">
-        Every card below is one tracked activity. Tap a card to assign it to a project — a red card isn't assigned
-        yet.
-      </p>
+      <div className="flex items-center justify-between">
+        <p className="text-xs text-on-surface-variant">
+          {view === 'time'
+            ? "Every card below is one tracked activity. Tap a card to assign it to a project — a red card isn't assigned yet."
+            : 'Apps you used today, most recently active first.'}
+        </p>
+        <div className="flex shrink-0 gap-1">
+          {(['time', 'app'] as View[]).map((v) => (
+            <button
+              key={v}
+              onClick={() => setView(v)}
+              className={`rounded-pill px-3 py-1 text-xs ${
+                view === v ? 'bg-primary text-surface' : 'bg-surface-container text-on-surface-variant'
+              }`}
+            >
+              {v === 'time' ? 'By time' : 'By app'}
+            </button>
+          ))}
+        </div>
+      </div>
 
-      <TimelineList blocks={blocks} onSelect={(index) => setAssigningIndex(index)} />
+      {view === 'time' ? (
+        <TimelineList blocks={blocks} onSelect={(index) => setAssigningIndex(index)} />
+      ) : (
+        <TimelineByApp blocks={blocks} />
+      )}
 
       {assigningIndex !== null && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/50">

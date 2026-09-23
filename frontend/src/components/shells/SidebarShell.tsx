@@ -15,12 +15,12 @@ export function SidebarShell({ children }: { children: ReactNode }) {
   const { activeScreen, setActiveScreen } = useUiStore()
   return (
     <div className="flex h-screen bg-surface text-on-surface">
-      <nav className="flex w-16 flex-col items-center gap-2 border-r border-outline py-4">
-        <div
-          className="mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-surface-container-high text-on-surface-variant"
-          title="chronly"
-        >
-          <User size={18} />
+      <nav className="flex w-44 flex-col gap-1 border-r border-outline p-3">
+        <div className="mb-3 flex items-center gap-2 px-2">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-surface-container-high text-on-surface-variant">
+            <User size={16} />
+          </div>
+          <span className="text-sm font-semibold">chronly</span>
         </div>
 
         {SCREENS.map((screen) => {
@@ -29,8 +29,7 @@ export function SidebarShell({ children }: { children: ReactNode }) {
             <button
               key={screen.id}
               onClick={() => setActiveScreen(screen.id)}
-              title={screen.label}
-              className={`relative flex w-12 items-center justify-center rounded-pill py-2.5 ${
+              className={`relative flex items-center gap-3 rounded-pill px-3 py-2.5 text-sm ${
                 activeScreen === screen.id ? 'text-surface' : 'text-on-surface-variant hover:bg-surface-container'
               }`}
             >
@@ -41,7 +40,8 @@ export function SidebarShell({ children }: { children: ReactNode }) {
                   transition={{ type: 'spring', bounce: 0.25, duration: 0.4 }}
                 />
               )}
-              <Icon size={18} className="relative" />
+              <Icon size={18} className="relative shrink-0" />
+              <span className="relative">{screen.label}</span>
             </button>
           )
         })}

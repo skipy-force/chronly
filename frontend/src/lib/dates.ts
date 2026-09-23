@@ -34,6 +34,17 @@ export function formatClockTime(d: Date): string {
   return `${h}:${m}`
 }
 
+export function formatRelativeTime(d: Date, now: Date): string {
+  const diffMs = now.getTime() - d.getTime()
+  const diffMin = Math.round(diffMs / 60000)
+  if (diffMin < 1) return 'just now'
+  if (diffMin < 60) return `${diffMin}m ago`
+  const diffHours = Math.round(diffMin / 60)
+  if (diffHours < 24) return `${diffHours}h ago`
+  const diffDays = Math.round(diffHours / 24)
+  return `${diffDays}d ago`
+}
+
 export function formatHoursMinutes(totalMinutes: number): string {
   const h = Math.floor(totalMinutes / 60)
   const m = Math.round(totalMinutes % 60)

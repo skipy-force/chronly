@@ -73,7 +73,7 @@ export function SettingsScreen() {
             min={1}
             value={afkMinutes}
             onChange={(e) => setAfkMinutes(e.target.value)}
-            className="w-20 rounded-md bg-surface-container px-3 py-1.5 text-sm outline-none focus:ring-1 focus:ring-primary"
+            className="w-20 rounded-md bg-surface-container px-3 py-1.5 text-sm outline-none [appearance:textfield] focus:ring-1 focus:ring-primary [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
           />
           <span className="text-sm text-on-surface-variant">minutes of inactivity before a block is split</span>
           <button

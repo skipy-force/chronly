@@ -86,7 +86,7 @@ function NewProjectForm({ onDone }: { onDone: () => void }) {
         value={estimate}
         onChange={(e) => setEstimate(e.target.value)}
         placeholder="Estimate, minutes (optional)"
-        className="rounded-md bg-surface-container-high px-3 py-1.5 text-sm outline-none focus:ring-1 focus:ring-primary"
+        className="rounded-md bg-surface-container-high px-3 py-1.5 text-sm outline-none [appearance:textfield] focus:ring-1 focus:ring-primary [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
       />
       <div className="flex gap-2">
         <button type="submit" className="flex-1 rounded-pill bg-primary px-3 py-1.5 text-sm text-surface">
@@ -146,7 +146,7 @@ function NewTaskForm({ projectId, onDone }: { projectId: number; onDone: () => v
         value={estimate}
         onChange={(e) => setEstimate(e.target.value)}
         placeholder="Estimate, minutes (optional)"
-        className="rounded-md bg-surface-container-high px-3 py-1.5 text-sm outline-none focus:ring-1 focus:ring-primary"
+        className="rounded-md bg-surface-container-high px-3 py-1.5 text-sm outline-none [appearance:textfield] focus:ring-1 focus:ring-primary [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
       />
       <div className="flex gap-2">
         <button type="submit" className="flex-1 rounded-pill bg-primary px-3 py-1.5 text-sm text-surface">
