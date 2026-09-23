@@ -43,6 +43,8 @@ export function ListTasksByProject(arg1:number):Promise<Array<tracker.Task>>;
 
 export function OpenDataFolder():Promise<void>;
 
+export function PickAvatar():Promise<string>;
+
 export function SetAFKThreshold(arg1:number):Promise<void>;
 
 export function SetCurrentTask(arg1:any):Promise<void>;

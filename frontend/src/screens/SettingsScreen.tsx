@@ -1,93 +1,95 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { FolderOpen } from 'lucide-react'
+import { FolderOpen, Upload, X } from 'lucide-react'
 import { api } from '../lib/api'
 import { queryKeys } from '../lib/queryClient'
-import { useUiStore, type NavStyle } from '../store/uiStore'
+import { useUiStore, type NavStyle, type Lang } from '../store/uiStore'
+import { useT } from '../lib/i18n'
 import { fadeInVariants, staggerContainer } from '../lib/motion'
+import { Avatar } from '../components/Avatar'
 
-const TIER_LABELS: Record<string, string> = {
-  wayland: 'Wayland (ext-idle-notify-v1)',
-  evdev: 'Raw input devices (mouse + keyboard)',
-  none: 'Unavailable — window tracking only, no AFK detection',
-}
+type Section = 'general' | 'profile' | 'appearance' | 'tracking' | 'developer'
 
-const NAV_STYLE_INFO: Record<NavStyle, { label: string; description: string }> = {
-  sidebar: { label: 'Sidebar', description: 'A vertical panel on the left with icons and labels, always visible.' },
-  tabs: { label: 'Tabs', description: 'A horizontal bar of tabs across the top, like browser tabs.' },
-  palette: {
-    label: 'Command palette',
-    description: 'No visible nav bar — press Ctrl/Cmd+K anywhere to jump to a section.',
-  },
-}
+const UI_SCALE_PRESETS = [90, 100, 110, 125, 150]
 
 const sectionVariants = fadeInVariants(0.35, 10)
 
+const NAV_STYLE_INFO: Record<NavStyle, { labelKey: string; descKey: string }> = {
+  sidebar: { labelKey: 'settings.navStyle.sidebar', descKey: 'settings.navStyle.sidebar.desc' },
+  tabs: { labelKey: 'settings.navStyle.tabs', descKey: 'settings.navStyle.tabs.desc' },
+  palette: { labelKey: 'settings.navStyle.palette', descKey: 'settings.navStyle.palette.desc' },
+}
+
 export function SettingsScreen() {
-  const { navStyle, setNavStyle, displayName, setDisplayName } = useUiStore()
-  const [nameInput, setNameInput] = useState(displayName)
-  const queryClient = useQueryClient()
+  const { showDeveloperSettings } = useUiStore()
+  const t = useT()
 
-  const { data: tier } = useQuery({
-    queryKey: ['idleDetectorTier'],
-    queryFn: async () => api.getIdleDetectorTier(),
-  })
-  const { data: appState } = useQuery({
-    queryKey: queryKeys.appState,
-    queryFn: api.getAppState,
-  })
-  const { data: dbPath } = useQuery({
-    queryKey: ['dbPath'],
-    queryFn: api.getDBPath,
-  })
-  const { data: appVersion } = useQuery({
-    queryKey: ['appVersion'],
-    queryFn: api.getAppVersion,
-  })
+  const [activeSection, setActiveSection] = useState<Section>('general')
 
-  const [afkMinutes, setAfkMinutes] = useState('')
+  const sections: { id: Section; labelKey: string }[] = [
+    { id: 'general', labelKey: 'settings.section.general' },
+    { id: 'profile', labelKey: 'settings.section.profile' },
+    { id: 'appearance', labelKey: 'settings.section.appearance' },
+    { id: 'tracking', labelKey: 'settings.section.tracking' },
+    ...(showDeveloperSettings ? [{ id: 'developer' as Section, labelKey: 'settings.section.developer' }] : []),
+  ]
+
   useEffect(() => {
-    if (appState) setAfkMinutes(String(appState.AFKThresholdMinutes))
-  }, [appState])
-
-  const afkMutation = useMutation({
-    mutationFn: (minutes: number) => api.setAFKThreshold(minutes),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.appState }),
-  })
-
-  const openFolderMutation = useMutation({
-    mutationFn: () => api.openDataFolder(),
-  })
+    if (activeSection === 'developer' && !showDeveloperSettings) setActiveSection('general')
+  }, [showDeveloperSettings, activeSection])
 
   return (
-    <motion.div
-      className="flex flex-col gap-6 p-6"
-      initial="hidden"
-      animate="show"
-      variants={staggerContainer(0.06)}
-    >
-      <motion.section variants={sectionVariants}>
-        <h2 className="mb-2 text-sm font-semibold uppercase text-on-surface-variant">Profile</h2>
-        <div className="flex items-center gap-2">
-          <input
-            value={nameInput}
-            onChange={(e) => setNameInput(e.target.value)}
-            placeholder="Your name"
-            className="w-48 rounded-md bg-surface-container px-3 py-1.5 text-sm outline-none focus:ring-1 focus:ring-primary"
-          />
+    <div className="flex h-full gap-4 p-6">
+      <div className="flex w-44 flex-col gap-1">
+        {sections.map((s) => (
           <button
-            onClick={() => setDisplayName(nameInput.trim())}
-            className="rounded-pill bg-surface-container px-3 py-1.5 text-sm hover:bg-surface-container-high"
+            key={s.id}
+            onClick={() => setActiveSection(s.id)}
+            className={`relative rounded-pill px-3 py-2 text-left text-sm ${
+              activeSection === s.id ? 'text-surface' : 'text-on-surface-variant hover:bg-surface-container'
+            }`}
           >
-            Save
+            {activeSection === s.id && (
+              <motion.div
+                layoutId="settings-section-pill"
+                className="absolute inset-0 rounded-pill bg-primary"
+                transition={{ type: 'spring', bounce: 0.25, duration: 0.4 }}
+              />
+            )}
+            <span className="relative">{t(s.labelKey)}</span>
           </button>
-        </div>
-        <p className="mt-2 text-xs text-on-surface-variant">Shows in the sidebar and in the Today greeting.</p>
-      </motion.section>
+        ))}
+      </div>
 
+      <motion.div
+        key={activeSection}
+        className="flex-1 overflow-auto"
+        initial="hidden"
+        animate="show"
+        variants={staggerContainer(0.06)}
+      >
+        {activeSection === 'general' && <GeneralSection />}
+        {activeSection === 'profile' && <ProfileSection />}
+        {activeSection === 'appearance' && <AppearanceSection />}
+        {activeSection === 'tracking' && <TrackingSection />}
+        {activeSection === 'developer' && showDeveloperSettings && <DeveloperSection />}
+      </motion.div>
+    </div>
+  )
+}
+
+function GeneralSection() {
+  const { navStyle, setNavStyle, language, setLanguage, showDeveloperSettings, setShowDeveloperSettings } =
+    useUiStore()
+  const t = useT()
+
+  return (
+    <div className="flex flex-col gap-6">
       <motion.section variants={sectionVariants}>
-        <h2 className="mb-2 text-sm font-semibold uppercase text-on-surface-variant">Navigation style</h2>
+        <h2 className="mb-2 text-sm font-semibold uppercase text-on-surface-variant">
+          {t('settings.navStyle.title')}
+        </h2>
         <div className="flex gap-2">
           {(['sidebar', 'tabs', 'palette'] as NavStyle[]).map((style) => (
             <button
@@ -104,15 +106,178 @@ export function SettingsScreen() {
                   transition={{ type: 'spring', bounce: 0.25, duration: 0.4 }}
                 />
               )}
-              <span className="relative">{NAV_STYLE_INFO[style].label}</span>
+              <span className="relative">{t(NAV_STYLE_INFO[style].labelKey)}</span>
             </button>
           ))}
         </div>
-        <p className="mt-2 text-xs text-on-surface-variant">{NAV_STYLE_INFO[navStyle].description}</p>
+        <p className="mt-2 text-xs text-on-surface-variant">{t(NAV_STYLE_INFO[navStyle].descKey)}</p>
       </motion.section>
 
       <motion.section variants={sectionVariants}>
-        <h2 className="mb-2 text-sm font-semibold uppercase text-on-surface-variant">AFK threshold</h2>
+        <h2 className="mb-2 text-sm font-semibold uppercase text-on-surface-variant">{t('settings.language')}</h2>
+        <div className="flex gap-2">
+          {(['en', 'ru'] as Lang[]).map((l) => (
+            <button
+              key={l}
+              onClick={() => setLanguage(l)}
+              className={`relative rounded-pill px-4 py-1.5 text-sm ${
+                language === l ? 'text-surface' : 'bg-surface-container text-on-surface-variant'
+              }`}
+            >
+              {language === l && (
+                <motion.div
+                  layoutId="language-pill"
+                  className="absolute inset-0 rounded-pill bg-primary"
+                  transition={{ type: 'spring', bounce: 0.25, duration: 0.4 }}
+                />
+              )}
+              <span className="relative">{l === 'en' ? 'English' : 'Русский'}</span>
+            </button>
+          ))}
+        </div>
+      </motion.section>
+
+      <motion.section variants={sectionVariants}>
+        <label className="flex cursor-pointer items-center gap-3 rounded-lg bg-surface-container p-3">
+          <input
+            type="checkbox"
+            checked={showDeveloperSettings}
+            onChange={(e) => setShowDeveloperSettings(e.target.checked)}
+            className="h-4 w-4 accent-primary"
+          />
+          <div>
+            <p className="text-sm">{t('settings.showDeveloperSettings')}</p>
+            <p className="text-xs text-on-surface-variant">{t('settings.showDeveloperSettings.desc')}</p>
+          </div>
+        </label>
+      </motion.section>
+    </div>
+  )
+}
+
+function ProfileSection() {
+  const { displayName, setDisplayName, avatarDataUri, setAvatarDataUri } = useUiStore()
+  const t = useT()
+  const [nameInput, setNameInput] = useState(displayName)
+
+  const pickAvatarMutation = useMutation({
+    mutationFn: () => api.pickAvatar(),
+    onSuccess: (uri) => {
+      if (uri) setAvatarDataUri(uri)
+    },
+  })
+
+  return (
+    <motion.section variants={sectionVariants} className="flex flex-col gap-6">
+      <div>
+        <h2 className="mb-2 text-sm font-semibold uppercase text-on-surface-variant">
+          {t('settings.profile.avatar')}
+        </h2>
+        <div className="flex items-center gap-3">
+          <Avatar displayName={displayName} avatarDataUri={avatarDataUri} size={56} />
+          <button
+            onClick={() => pickAvatarMutation.mutate()}
+            className="flex items-center gap-2 rounded-pill bg-surface-container px-3 py-1.5 text-sm hover:bg-surface-container-high"
+          >
+            <Upload size={14} />
+            {t('settings.profile.uploadAvatar')}
+          </button>
+          {avatarDataUri && (
+            <button
+              onClick={() => setAvatarDataUri('')}
+              className="flex items-center gap-2 rounded-pill bg-surface-container px-3 py-1.5 text-sm hover:bg-surface-container-high"
+            >
+              <X size={14} />
+              {t('settings.profile.removeAvatar')}
+            </button>
+          )}
+        </div>
+      </div>
+
+      <div>
+        <h2 className="mb-2 text-sm font-semibold uppercase text-on-surface-variant">{t('settings.profile.name')}</h2>
+        <div className="flex items-center gap-2">
+          <input
+            value={nameInput}
+            onChange={(e) => setNameInput(e.target.value)}
+            placeholder={t('settings.profile.namePlaceholder')}
+            className="w-48 rounded-md bg-surface-container px-3 py-1.5 text-sm outline-none focus:ring-1 focus:ring-primary"
+          />
+          <button
+            onClick={() => setDisplayName(nameInput.trim())}
+            className="rounded-pill bg-surface-container px-3 py-1.5 text-sm hover:bg-surface-container-high"
+          >
+            {t('common.save')}
+          </button>
+        </div>
+        <p className="mt-2 text-xs text-on-surface-variant">{t('settings.profile.hint')}</p>
+      </div>
+    </motion.section>
+  )
+}
+
+function AppearanceSection() {
+  const { uiScale, setUiScale } = useUiStore()
+  const t = useT()
+
+  return (
+    <motion.section variants={sectionVariants}>
+      <h2 className="mb-2 text-sm font-semibold uppercase text-on-surface-variant">
+        {t('settings.appearance.uiScale')}
+      </h2>
+      <div className="flex gap-2">
+        {UI_SCALE_PRESETS.map((preset) => (
+          <button
+            key={preset}
+            onClick={() => setUiScale(preset)}
+            className={`relative rounded-pill px-4 py-1.5 text-sm ${
+              uiScale === preset ? 'text-surface' : 'bg-surface-container text-on-surface-variant'
+            }`}
+          >
+            {uiScale === preset && (
+              <motion.div
+                layoutId="ui-scale-pill"
+                className="absolute inset-0 rounded-pill bg-primary"
+                transition={{ type: 'spring', bounce: 0.25, duration: 0.4 }}
+              />
+            )}
+            <span className="relative">{preset}%</span>
+          </button>
+        ))}
+      </div>
+    </motion.section>
+  )
+}
+
+function TrackingSection() {
+  const t = useT()
+  const queryClient = useQueryClient()
+
+  const { data: tier } = useQuery({
+    queryKey: ['idleDetectorTier'],
+    queryFn: async () => api.getIdleDetectorTier(),
+  })
+  const { data: appState } = useQuery({
+    queryKey: queryKeys.appState,
+    queryFn: api.getAppState,
+  })
+
+  const [afkMinutes, setAfkMinutes] = useState('')
+  useEffect(() => {
+    if (appState) setAfkMinutes(String(appState.AFKThresholdMinutes))
+  }, [appState])
+
+  const afkMutation = useMutation({
+    mutationFn: (minutes: number) => api.setAFKThreshold(minutes),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.appState }),
+  })
+
+  return (
+    <div className="flex flex-col gap-6">
+      <motion.section variants={sectionVariants}>
+        <h2 className="mb-2 text-sm font-semibold uppercase text-on-surface-variant">
+          {t('settings.tracking.afkThreshold')}
+        </h2>
         <div className="flex items-center gap-2">
           <input
             type="number"
@@ -121,7 +286,7 @@ export function SettingsScreen() {
             onChange={(e) => setAfkMinutes(e.target.value)}
             className="w-20 rounded-md bg-surface-container px-3 py-1.5 text-sm outline-none [appearance:textfield] focus:ring-1 focus:ring-primary [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
           />
-          <span className="text-sm text-on-surface-variant">minutes of inactivity before a block is split</span>
+          <span className="text-sm text-on-surface-variant">{t('settings.tracking.afkThresholdDesc')}</span>
           <button
             onClick={() => {
               const minutes = Number(afkMinutes)
@@ -129,42 +294,61 @@ export function SettingsScreen() {
             }}
             className="rounded-pill bg-surface-container px-3 py-1.5 text-sm hover:bg-surface-container-high"
           >
-            Save
+            {t('common.save')}
           </button>
         </div>
       </motion.section>
 
       <motion.section variants={sectionVariants}>
-        <h2 className="mb-2 text-sm font-semibold uppercase text-on-surface-variant">Idle detection</h2>
+        <h2 className="mb-2 text-sm font-semibold uppercase text-on-surface-variant">
+          {t('settings.tracking.idleDetection')}
+        </h2>
         <div
-          className={`rounded-lg p-3 text-sm ${
-            tier === 'none' ? 'bg-error/10 text-error' : 'bg-surface-container'
-          }`}
+          className={`rounded-lg p-3 text-sm ${tier === 'none' ? 'bg-error/10 text-error' : 'bg-surface-container'}`}
         >
-          {tier ? TIER_LABELS[tier] ?? tier : 'Loading...'}
+          {tier ? t(`idle.${tier}`) : t('common.loading')}
         </div>
       </motion.section>
+    </div>
+  )
+}
 
-      <motion.section variants={sectionVariants}>
-        <h2 className="mb-2 text-sm font-semibold uppercase text-on-surface-variant">Diagnostics</h2>
-        <div className="flex flex-col gap-2 rounded-lg bg-surface-container p-3 text-sm">
-          <div className="flex items-center justify-between gap-4">
-            <span className="text-on-surface-variant">Database</span>
-            <span className="truncate font-mono text-xs">{dbPath ?? 'Loading...'}</span>
-          </div>
-          <div className="flex items-center justify-between gap-4">
-            <span className="text-on-surface-variant">Version</span>
-            <span className="font-mono text-xs">{appVersion ?? 'Loading...'}</span>
-          </div>
-          <button
-            onClick={() => openFolderMutation.mutate()}
-            className="mt-1 flex items-center gap-2 self-start rounded-pill bg-surface-container-high px-3 py-1.5 text-sm hover:bg-outline/20"
-          >
-            <FolderOpen size={14} />
-            Open data folder
-          </button>
+function DeveloperSection() {
+  const t = useT()
+  const { data: dbPath } = useQuery({
+    queryKey: ['dbPath'],
+    queryFn: api.getDBPath,
+  })
+  const { data: appVersion } = useQuery({
+    queryKey: ['appVersion'],
+    queryFn: api.getAppVersion,
+  })
+  const openFolderMutation = useMutation({
+    mutationFn: () => api.openDataFolder(),
+  })
+
+  return (
+    <motion.section variants={sectionVariants}>
+      <h2 className="mb-2 text-sm font-semibold uppercase text-on-surface-variant">
+        {t('settings.developer.diagnostics')}
+      </h2>
+      <div className="flex flex-col gap-2 rounded-lg bg-surface-container p-3 text-sm">
+        <div className="flex items-center justify-between gap-4">
+          <span className="text-on-surface-variant">{t('settings.developer.database')}</span>
+          <span className="truncate font-mono text-xs">{dbPath ?? t('common.loading')}</span>
         </div>
-      </motion.section>
-    </motion.div>
+        <div className="flex items-center justify-between gap-4">
+          <span className="text-on-surface-variant">{t('settings.developer.version')}</span>
+          <span className="font-mono text-xs">{appVersion ?? t('common.loading')}</span>
+        </div>
+        <button
+          onClick={() => openFolderMutation.mutate()}
+          className="mt-1 flex items-center gap-2 self-start rounded-pill bg-surface-container-high px-3 py-1.5 text-sm hover:bg-outline/20"
+        >
+          <FolderOpen size={14} />
+          {t('settings.developer.openFolder')}
+        </button>
+      </div>
+    </motion.section>
   )
 }

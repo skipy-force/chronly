@@ -1,18 +1,18 @@
 import { ReactNode } from 'react'
 import { motion } from 'framer-motion'
-import { User } from 'lucide-react'
 import { SCREENS, useUiStore } from '../../store/uiStore'
 import { SCREEN_ICONS } from '../../lib/screenIcons'
+import { useT } from '../../lib/i18n'
+import { Avatar } from '../Avatar'
 
 export function SidebarShell({ children }: { children: ReactNode }) {
-  const { activeScreen, setActiveScreen, displayName } = useUiStore()
+  const { activeScreen, setActiveScreen, displayName, avatarDataUri } = useUiStore()
+  const t = useT()
   return (
     <div className="flex h-screen bg-surface text-on-surface">
       <nav className="flex w-44 flex-col gap-1 bg-surface-container/40 p-3">
         <div className="mb-3 flex items-center gap-2 px-2">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-surface-container-high text-sm font-semibold text-on-surface-variant">
-            {displayName ? displayName.charAt(0).toUpperCase() : <User size={16} />}
-          </div>
+          <Avatar displayName={displayName} avatarDataUri={avatarDataUri} size={36} />
           <span className="truncate text-sm font-semibold">{displayName || 'chronly'}</span>
         </div>
 
@@ -34,7 +34,7 @@ export function SidebarShell({ children }: { children: ReactNode }) {
                 />
               )}
               <Icon size={18} className="relative shrink-0" />
-              <span className="relative">{screen.label}</span>
+              <span className="relative">{t(screen.labelKey)}</span>
             </button>
           )
         })}

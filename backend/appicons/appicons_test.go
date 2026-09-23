@@ -108,3 +108,30 @@ func TestPreferredIconPath_EmptyInputReturnsEmpty(t *testing.T) {
 		t.Fatalf("got %q, want empty", got)
 	}
 }
+
+func TestMimeTypeForExt_KnownExtensions(t *testing.T) {
+	cases := map[string]string{
+		".svg":  "image/svg+xml",
+		".SVG":  "image/svg+xml",
+		".png":  "image/png",
+		".jpg":  "image/jpeg",
+		".jpeg": "image/jpeg",
+		".gif":  "image/gif",
+		".webp": "image/webp",
+	}
+	for ext, want := range cases {
+		got, ok := MimeTypeForExt(ext)
+		if !ok {
+			t.Errorf("MimeTypeForExt(%q): expected ok=true", ext)
+		}
+		if got != want {
+			t.Errorf("MimeTypeForExt(%q) = %q, want %q", ext, got, want)
+		}
+	}
+}
+
+func TestMimeTypeForExt_UnknownExtensionNotOK(t *testing.T) {
+	if _, ok := MimeTypeForExt(".bmp"); ok {
+		t.Fatal("expected ok=false for unsupported extension")
+	}
+}

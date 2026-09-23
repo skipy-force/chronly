@@ -40,8 +40,16 @@ function AppShell() {
   )
 }
 
+function useUiScale() {
+  const uiScale = useUiStore((s) => s.uiScale)
+  useEffect(() => {
+    document.documentElement.style.fontSize = `${(16 * uiScale) / 100}px`
+  }, [uiScale])
+}
+
 export default function App() {
   useEffect(() => installMatugenTheme(), [])
+  useUiScale()
 
   return (
     <QueryClientProvider client={queryClient}>

@@ -68,13 +68,8 @@ func resolveAppIconDataURI(appName string) string {
 		return ""
 	}
 
-	var mime string
-	switch strings.ToLower(filepath.Ext(path)) {
-	case ".svg":
-		mime = "image/svg+xml"
-	case ".png":
-		mime = "image/png"
-	default:
+	mime, ok := appicons.MimeTypeForExt(filepath.Ext(path))
+	if !ok {
 		return ""
 	}
 	return "data:" + mime + ";base64," + base64.StdEncoding.EncodeToString(data)

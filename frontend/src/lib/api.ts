@@ -49,6 +49,7 @@ export const api = {
   openDataFolder: () => App.OpenDataFolder(),
 
   getAppIcon: (appName: string) => App.GetAppIcon(appName),
+  pickAvatar: () => App.PickAvatar(),
 }
 
 export function useQueryEvents() {

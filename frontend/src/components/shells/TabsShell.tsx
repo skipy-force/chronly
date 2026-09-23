@@ -2,9 +2,11 @@ import { ReactNode } from 'react'
 import { motion } from 'framer-motion'
 import { SCREENS, useUiStore } from '../../store/uiStore'
 import { SCREEN_ICONS } from '../../lib/screenIcons'
+import { useT } from '../../lib/i18n'
 
 export function TabsShell({ children }: { children: ReactNode }) {
   const { activeScreen, setActiveScreen } = useUiStore()
+  const t = useT()
   return (
     <div className="flex h-screen flex-col bg-surface text-on-surface">
       <nav className="flex gap-1 bg-surface-container/40 p-2">
@@ -26,7 +28,7 @@ export function TabsShell({ children }: { children: ReactNode }) {
                 />
               )}
               <Icon size={16} className="relative shrink-0" />
-              <span className="relative">{screen.label}</span>
+              <span className="relative">{t(screen.labelKey)}</span>
             </button>
           )
         })}

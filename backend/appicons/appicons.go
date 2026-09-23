@@ -75,3 +75,17 @@ func PreferredIconPath(paths []string) string {
 	}
 	return best
 }
+
+var mimeByExt = map[string]string{
+	".svg":  "image/svg+xml",
+	".png":  "image/png",
+	".jpg":  "image/jpeg",
+	".jpeg": "image/jpeg",
+	".gif":  "image/gif",
+	".webp": "image/webp",
+}
+
+func MimeTypeForExt(ext string) (string, bool) {
+	mime, ok := mimeByExt[strings.ToLower(ext)]
+	return mime, ok
+}

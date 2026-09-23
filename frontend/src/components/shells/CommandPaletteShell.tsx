@@ -1,8 +1,10 @@
 import { ReactNode, useEffect, useState } from 'react'
 import { SCREENS, useUiStore } from '../../store/uiStore'
+import { useT } from '../../lib/i18n'
 
 export function CommandPaletteShell({ children }: { children: ReactNode }) {
   const { setActiveScreen } = useUiStore()
+  const t = useT()
   const [open, setOpen] = useState(false)
 
   useEffect(() => {
@@ -32,7 +34,7 @@ export function CommandPaletteShell({ children }: { children: ReactNode }) {
                 }}
                 className="block w-full rounded-md px-3 py-2 text-left text-sm hover:bg-surface-container"
               >
-                {screen.label}
+                {t(screen.labelKey)}
               </button>
             ))}
           </div>

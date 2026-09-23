@@ -205,36 +205,28 @@ function StatCard({ label, value }: { label: string; value: string }) {
 
 function PauseResumeButton({ tracking, onToggle }: { tracking: boolean; onToggle: () => void }) {
   return (
-    <motion.button
+    <button
       onClick={onToggle}
-      whileTap={{ scale: 0.94 }}
-      className={`relative flex items-center gap-2 overflow-hidden rounded-pill px-4 py-2 text-sm transition-colors duration-300 ${
+      className={`flex items-center gap-2 rounded-pill px-4 py-2 text-sm transition-colors duration-300 ${
         tracking
           ? 'bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25'
           : 'bg-red-500/15 text-red-400 hover:bg-red-500/25'
       }`}
     >
-      {tracking && (
-        <motion.span
-          className="absolute inset-0 rounded-pill bg-emerald-500/25"
-          animate={{ opacity: [0.6, 0, 0.6], scale: [1, 1.12, 1] }}
-          transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-        />
-      )}
       <AnimatePresence mode="wait" initial={false}>
         <motion.span
           key={tracking ? 'pause' : 'resume'}
-          initial={{ opacity: 0, rotate: -90, scale: 0.5 }}
-          animate={{ opacity: 1, rotate: 0, scale: 1 }}
-          exit={{ opacity: 0, rotate: 90, scale: 0.5 }}
-          transition={{ duration: 0.25 }}
-          className="relative flex items-center gap-2"
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -8 }}
+          transition={{ duration: 0.2, ease: 'easeOut' }}
+          className="flex items-center gap-2"
         >
           {tracking ? <Pause size={16} /> : <Play size={16} />}
           {tracking ? 'Pause' : 'Resume'}
         </motion.span>
       </AnimatePresence>
-    </motion.button>
+    </button>
   )
 }
 

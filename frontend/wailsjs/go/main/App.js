@@ -82,6 +82,10 @@ export function OpenDataFolder() {
   return window['go']['main']['App']['OpenDataFolder']();
 }
 
+export function PickAvatar() {
+  return window['go']['main']['App']['PickAvatar']();
+}
+
 export function SetAFKThreshold(arg1) {
   return window['go']['main']['App']['SetAFKThreshold'](arg1);
 }
