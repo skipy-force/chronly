@@ -25,9 +25,22 @@ func (f *fakeTracker) Watch(ctx context.Context, updates chan<- WindowInfo) erro
 	return ctx.Err()
 }
 
-type fakeIdle struct{ d time.Duration }
+type fakeIdle struct {
+	mu sync.Mutex
+	d  time.Duration
+}
 
-func (f *fakeIdle) IdleDuration() time.Duration { return f.d }
+func (f *fakeIdle) IdleDuration() time.Duration {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	return f.d
+}
+
+func (f *fakeIdle) setIdle(d time.Duration) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.d = d
+}
 
 type fakeRules struct{ rules []Rule }
 
@@ -142,5 +155,31 @@ func TestRunner_CallsOnBlockSavedWhenBlockCloses(t *testing.T) {
 	defer mu.Unlock()
 	if len(saved) != 1 || saved[0].AppName != "code" {
 		t.Fatalf("expected OnBlockSaved called once with the 'code' block, got %+v", saved)
+	}
+}
+
+func TestRunner_AppliesConfiguredAFKThreshold(t *testing.T) {
+	tr := &fakeTracker{
+		events: []WindowInfo{{AppName: "code", WindowTitle: "main.go"}},
+		delay:  200 * time.Millisecond,
+	}
+	sink := &fakeSink{}
+	state := &fakeState{state: AppState{AFKThresholdMinutes: 1}}
+	idle := &fakeIdle{}
+	r := NewRunner(tr, idle, 30*time.Minute, &fakeRules{}, state, sink)
+	r.pollInterval = 5 * time.Millisecond
+
+	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+	defer cancel()
+
+	go func() {
+		time.Sleep(30 * time.Millisecond)
+		idle.setIdle(90 * time.Second)
+	}()
+
+	r.Run(ctx)
+
+	if len(sink.saved) != 1 {
+		t.Fatalf("expected the configured 1m AFK threshold to close the block, got %d saved: %+v", len(sink.saved), sink.saved)
 	}
 }

@@ -27,6 +27,10 @@ func NewAggregator(afkThreshold time.Duration) *Aggregator {
 	return &Aggregator{afkThreshold: afkThreshold}
 }
 
+func (a *Aggregator) SetThreshold(d time.Duration) {
+	a.afkThreshold = d
+}
+
 func (a *Aggregator) Add(s Sample) (closed Block, ok bool) {
 	if s.Idle >= a.afkThreshold {
 		return a.closeOpen()

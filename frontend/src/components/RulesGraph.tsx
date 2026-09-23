@@ -60,11 +60,6 @@ export function RulesGraph({ rules, projects, onDeleteRule }: RulesGraphProps) {
     }))
 
     const graphNodes = [...projectNodes, ...ruleNodes]
-    // A rule can point at a project that's no longer in `projects` (e.g. it
-    // was archived, which removes it from ListProjects). forceLink throws if
-    // a link references a node id with no matching node, so only link rules
-    // whose target project is actually present — the rule node itself still
-    // renders, just unconnected, so it stays deletable.
     const graphLinks: GraphLink[] = rules
       .filter((r) => projectIds.has(r.ProjectID))
       .map((r) => ({

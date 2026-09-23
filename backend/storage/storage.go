@@ -2,6 +2,7 @@ package storage
 
 import (
 	"database/sql"
+	"strings"
 
 	_ "modernc.org/sqlite"
 )
@@ -60,9 +61,19 @@ CREATE TABLE IF NOT EXISTS manual_entries (
 CREATE TABLE IF NOT EXISTS app_state (
       id INTEGER PRIMARY KEY CHECK (id = 1),
       current_task_id INTEGER REFERENCES tasks(id),
-      tracking_paused INTEGER NOT NULL DEFAULT 0
+      tracking_paused INTEGER NOT NULL DEFAULT 0,
+      afk_threshold_minutes INTEGER NOT NULL DEFAULT 3
 );
 INSERT OR IGNORE INTO app_state (id, tracking_paused) VALUES (1, 0);`
+
+func migrate(db *sql.DB) error {
+	if _, err := db.Exec(`ALTER TABLE app_state ADD COLUMN afk_threshold_minutes INTEGER NOT NULL DEFAULT 3`); err != nil {
+		if !strings.Contains(err.Error(), "duplicate column") {
+			return err
+		}
+	}
+	return nil
+}
 
 func Open(path string) (*Store, error) {
 	db, err := sql.Open("sqlite", path+"?_journal_mode=WAL&_busy_timeout=5000")
@@ -71,6 +82,10 @@ func Open(path string) (*Store, error) {
 	}
 
 	if _, err := db.Exec(schema); err != nil {
+		db.Close()
+		return nil, err
+	}
+	if err := migrate(db); err != nil {
 		db.Close()
 		return nil, err
 	}

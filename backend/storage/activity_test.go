@@ -59,9 +59,6 @@ func TestSaveActivityBlock_PersistsFields(t *testing.T) {
 func TestListActivityBlocksForRange_NonUTCSaveMatchesUTCQuery(t *testing.T) {
 	s := newTestStore(t)
 	moscow := time.FixedZone("MSK", 3*60*60)
-	// 00:30 MSK on Jan 2 is 21:30 UTC on Jan 1 — a different calendar day in
-	// each zone. A query for the UTC day "Jan 1" must still find it, even
-	// though its local-zone wall-clock date is "Jan 2".
 	localStart := time.Date(2026, 1, 2, 0, 30, 0, 0, moscow)
 
 	if _, err := s.SaveActivityBlock(

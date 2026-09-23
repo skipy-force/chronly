@@ -66,6 +66,10 @@ export function ListTasksByProject(arg1) {
   return window['go']['main']['App']['ListTasksByProject'](arg1);
 }
 
+export function SetAFKThreshold(arg1) {
+  return window['go']['main']['App']['SetAFKThreshold'](arg1);
+}
+
 export function SetCurrentTask(arg1) {
   return window['go']['main']['App']['SetCurrentTask'](arg1);
 }

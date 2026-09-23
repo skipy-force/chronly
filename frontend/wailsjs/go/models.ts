@@ -21,6 +21,7 @@ export namespace tracker {
 	    CurrentTaskID?: number;
 	    CurrentProjectID?: number;
 	    TrackingPaused: boolean;
+	    AFKThresholdMinutes: number;
 	
 	    static createFrom(source: any = {}) {
 	        return new AppState(source);
@@ -31,6 +32,7 @@ export namespace tracker {
 	        this.CurrentTaskID = source["CurrentTaskID"];
 	        this.CurrentProjectID = source["CurrentProjectID"];
 	        this.TrackingPaused = source["TrackingPaused"];
+	        this.AFKThresholdMinutes = source["AFKThresholdMinutes"];
 	    }
 	}
 	export class Block {

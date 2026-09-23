@@ -73,6 +73,10 @@ func (r *Runner) process(s Sample) error {
 		return err
 	}
 
+	if state.AFKThresholdMinutes > 0 {
+		r.aggregator.SetThreshold(time.Duration(state.AFKThresholdMinutes) * time.Minute)
+	}
+
 	var block Block
 	var ok bool
 	if state.TrackingPaused {

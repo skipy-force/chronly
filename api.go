@@ -105,3 +105,13 @@ func (a *App) UpdateAssignmentRule(r tracker.Rule) error {
 func (a *App) DeleteAssignmentRule(id int64) error {
 	return a.store.DeleteAssignmentRule(id)
 }
+
+func (a *App) SetAFKThreshold(minutes int) error {
+	if err := a.store.SetAFKThresholdMinutes(minutes); err != nil {
+		return err
+	}
+	if state, err := a.store.GetAppState(); err == nil {
+		emitStateChanged(a.ctx, state)
+	}
+	return nil
+}

@@ -85,3 +85,22 @@ func TestAggregator_CloseOpen(t *testing.T) {
 		t.Fatal("sample right after CloseOpen should start a fresh block, not close one")
 	}
 }
+
+func TestAggregator_SetThreshold(t *testing.T) {
+	agg := NewAggregator(3 * time.Minute)
+	win := WindowInfo{AppName: "code", WindowTitle: "main.go"}
+
+	agg.Add(Sample{Window: win, At: t0(0)})
+	if _, ok := agg.Add(Sample{Window: win, Idle: 90 * time.Second, At: t0(90)}); ok {
+		t.Fatal("90s idle should not close the block against the default 3m threshold")
+	}
+
+	agg.SetThreshold(1 * time.Minute)
+	closed, ok := agg.Add(Sample{Window: win, Idle: 90 * time.Second, At: t0(180)})
+	if !ok {
+		t.Fatal("90s idle should close the block once the threshold is lowered to 1m")
+	}
+	if closed.StartTime != t0(0) {
+		t.Fatalf("unexpected closed block: %+v", closed)
+	}
+}

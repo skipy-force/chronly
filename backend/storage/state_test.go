@@ -12,6 +12,24 @@ func TestGetAppState_DefaultsToUnsetAndNotPaused(t *testing.T) {
 	if st.CurrentTaskID != nil || st.TrackingPaused {
 		t.Fatalf("expected fresh app_state row, got %+v", st)
 	}
+	if st.AFKThresholdMinutes != 3 {
+		t.Fatalf("expected default AFK threshold of 3 minutes, got %d", st.AFKThresholdMinutes)
+	}
+}
+
+func TestSetAFKThresholdMinutes(t *testing.T) {
+	s := newTestStore(t)
+
+	if err := s.SetAFKThresholdMinutes(10); err != nil {
+		t.Fatalf("SetAFKThresholdMinutes: %v", err)
+	}
+	st, err := s.GetAppState()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if st.AFKThresholdMinutes != 10 {
+		t.Fatalf("expected AFK threshold 10, got %d", st.AFKThresholdMinutes)
+	}
 }
 
 func TestGetAppState_ReflectsCurrentTask(t *testing.T) {

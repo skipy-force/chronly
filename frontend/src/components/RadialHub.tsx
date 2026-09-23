@@ -27,9 +27,6 @@ function pointAt(angleDeg: number, radius: number): { x: number; y: number } {
   return { x: CENTER + Math.cos(rad) * radius, y: CENTER + Math.sin(rad) * radius }
 }
 
-// A gentle S-wave from hub to satellite: one cubic bezier whose two control
-// points sit at 1/3 and 2/3 along the ray, nudged to opposite sides
-// perpendicular to it, instead of a straight chord.
 function wavePath(angleDeg: number): string {
   const rad = (angleDeg * Math.PI) / 180
   const dirX = Math.cos(rad)
@@ -79,9 +76,16 @@ export function RadialHub({ centerLabel, centerValue, satellites, onCenterClick 
         transition={{ repeat: Infinity, duration: ORBIT_DURATION, ease: 'linear' }}
       >
         <svg viewBox={`0 0 ${SIZE} ${SIZE}`} width={SIZE} height={SIZE} className="absolute inset-0">
-          {satellites.map((s) => (
-            <path key={s.id} d={wavePath(s.angleDeg)} className="fill-none stroke-primary/50" strokeWidth="1" />
-          ))}
+          {satellites.map((s) => {
+            const d = wavePath(s.angleDeg)
+            return (
+              <g key={s.id} className="fill-none" strokeLinecap="round">
+                <path d={d} className="stroke-primary/10" strokeWidth="7" />
+                <path d={d} className="stroke-primary/30" strokeWidth="3" />
+                <path d={d} className="stroke-primary/70" strokeWidth="1" />
+              </g>
+            )
+          })}
         </svg>
 
         {satellites.map((s) => {

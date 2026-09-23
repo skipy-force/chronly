@@ -35,6 +35,8 @@ export function ListProjects():Promise<Array<tracker.Project>>;
 
 export function ListTasksByProject(arg1:number):Promise<Array<tracker.Task>>;
 
+export function SetAFKThreshold(arg1:number):Promise<void>;
+
 export function SetCurrentTask(arg1:any):Promise<void>;
 
 export function SetTaskStatus(arg1:number,arg2:string):Promise<void>;
