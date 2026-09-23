@@ -3,6 +3,7 @@ package main
 import (
 	_ "embed"
 	"fmt"
+	"log"
 	"time"
 
 	"chronly/backend/tracker"
@@ -66,25 +67,30 @@ func (t *Tray) onReady() {
 	go t.refreshLoop()
 
 	t.refresh()
+	log.Println("tray: ready")
 }
 
 func (t *Tray) onExit() {}
 
 func (t *Tray) onPauseClicked() {
 	paused := !t.pause.Checked()
+	log.Printf("tray: pause clicked, currentlyChecked=%v -> settingPaused=%v", t.pause.Checked(), paused)
 	if err := t.app.store.SetTrackingPaused(paused); err != nil {
+		log.Printf("tray: SetTrackingPaused(%v) failed: %v", paused, err)
 		return
 	}
 	t.refresh()
 }
 
 func (t *Tray) onOpenClicked() {
+	log.Printf("tray: open clicked, ctx set=%v", t.app.ctx != nil)
 	if t.app.ctx != nil {
 		wailsruntime.WindowShow(t.app.ctx)
 	}
 }
 
 func (t *Tray) onQuitClicked() {
+	log.Println("tray: quit clicked")
 	if t.app.ctx != nil {
 		wailsruntime.Quit(t.app.ctx)
 	}
@@ -94,10 +100,12 @@ func (t *Tray) onQuitClicked() {
 func (t *Tray) onSlotClicked(i int) func() {
 	return func() {
 		taskID := t.slots[i].taskID
+		log.Printf("tray: slot %d clicked, taskID=%d", i, taskID)
 		if taskID == 0 {
 			return
 		}
 		if err := t.app.store.SetCurrentTask(&taskID); err != nil {
+			log.Printf("tray: SetCurrentTask(%d) failed: %v", taskID, err)
 			return
 		}
 		t.refresh()
@@ -114,7 +122,9 @@ func (t *Tray) refreshLoop() {
 
 func (t *Tray) refresh() {
 	state, err := t.app.store.GetAppState()
-	if err == nil {
+	if err != nil {
+		log.Printf("tray: GetAppState failed: %v", err)
+	} else {
 		if state.TrackingPaused {
 			t.pause.Check()
 		} else {
@@ -125,6 +135,7 @@ func (t *Tray) refresh() {
 
 	projects, err := t.app.store.ListProjects()
 	if err != nil {
+		log.Printf("tray: ListProjects failed: %v", err)
 		return
 	}
 
