@@ -24,6 +24,7 @@ interface RulesGraphProps {
   rules: tracker.Rule[]
   projects: tracker.Project[]
   onDeleteRule: (id: number) => void
+  onEditRule: (id: number) => void
 }
 
 const VIRTUAL_WIDTH = 1600
@@ -42,7 +43,7 @@ function curvedPath(x1: number, y1: number, x2: number, y2: number): string {
   return `M ${x1} ${y1} Q ${controlX} ${controlY} ${x2} ${y2}`
 }
 
-export function RulesGraph({ rules, projects, onDeleteRule }: RulesGraphProps) {
+export function RulesGraph({ rules, projects, onDeleteRule, onEditRule }: RulesGraphProps) {
   const [nodes, setNodes] = useState<GraphNode[]>([])
   const [links, setLinks] = useState<GraphLink[]>([])
   const [pan, setPan] = useState({ x: 0, y: 0 })
@@ -215,15 +216,28 @@ export function RulesGraph({ rules, projects, onDeleteRule }: RulesGraphProps) {
                 {node.label.length > 12 ? node.label.slice(0, 11) + '…' : node.label}
               </text>
               {node.kind === 'rule' && node.ruleId !== undefined && (
-                <text
-                  textAnchor="middle"
-                  y={38}
-                  className="cursor-pointer fill-error text-[10px]"
-                  onPointerDown={(e) => e.stopPropagation()}
-                  onClick={() => onDeleteRule(node.ruleId as number)}
-                >
-                  delete
-                </text>
+                <>
+                  <text
+                    textAnchor="middle"
+                    x={-14}
+                    y={38}
+                    className="cursor-pointer fill-primary text-[10px]"
+                    onPointerDown={(e) => e.stopPropagation()}
+                    onClick={() => onEditRule(node.ruleId as number)}
+                  >
+                    edit
+                  </text>
+                  <text
+                    textAnchor="middle"
+                    x={14}
+                    y={38}
+                    className="cursor-pointer fill-error text-[10px]"
+                    onPointerDown={(e) => e.stopPropagation()}
+                    onClick={() => onDeleteRule(node.ruleId as number)}
+                  >
+                    delete
+                  </text>
+                </>
               )}
             </g>
           ))}
