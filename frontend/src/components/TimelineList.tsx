@@ -55,7 +55,9 @@ export function TimelineList({ blocks, onSelect }: TimelineListProps) {
             >
               <AppIconBadge appName={block.AppName || ''} size={40} />
               <div className="min-w-0 flex-1">
-                <p className="truncate text-base font-medium">{prettyAppName(block.AppName)}</p>
+                <p className="truncate text-base font-medium">
+                  {prettyAppName(block.AppName) || t('appNames.noActiveWindow')}
+                </p>
                 <p className="text-sm text-on-surface-variant">
                   {formatClockTime(start)} – {formatClockTime(end)}
                   {unsorted && ` · ${t('timeline.notAssigned')}`}

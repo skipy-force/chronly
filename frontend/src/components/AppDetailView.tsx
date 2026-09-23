@@ -72,7 +72,7 @@ export function AppDetailView({ appName, blocks, initialDateKey, actualNow, onBa
           </button>
           <AppIconBadge appName={appName} size={24} />
           <h1 className="text-lg font-semibold">
-            {prettyAppName(appName)} — {isViewingToday ? t('nav.today') : selectedKey}
+            {prettyAppName(appName) || t('appNames.noActiveWindow')} — {isViewingToday ? t('nav.today') : selectedKey}
           </h1>
         </div>
         <div className="flex items-center gap-1">

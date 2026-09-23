@@ -39,7 +39,7 @@ export const AppBreakdownList = memo(function AppBreakdownList({ entries, onSele
         >
           <AppIconBadge appName={entry.appName} />
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium">{prettyAppName(entry.appName)}</p>
+            <p className="truncate text-sm font-medium">{prettyAppName(entry.appName) || t('appNames.noActiveWindow')}</p>
             <div className="mt-1 h-1.5 overflow-hidden rounded-pill bg-surface-container-high">
               <motion.div
                 className="h-full rounded-pill bg-primary"

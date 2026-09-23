@@ -160,7 +160,9 @@ export function TimelineScreen() {
                 <div className="mb-3 flex items-center gap-3 rounded-lg bg-surface-container p-3">
                   <AppIconBadge appName={block.AppName || ''} size={32} />
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium">{prettyAppName(block.AppName)}</p>
+                    <p className="truncate text-sm font-medium">
+                      {prettyAppName(block.AppName) || t('appNames.noActiveWindow')}
+                    </p>
                     <p className="text-xs text-on-surface-variant">
                       {formatClockTime(new Date(block.StartTime))} – {formatClockTime(new Date(block.EndTime))}
                     </p>

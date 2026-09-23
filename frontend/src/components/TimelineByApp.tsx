@@ -51,7 +51,9 @@ export function TimelineByApp({ blocks }: TimelineByAppProps) {
           <div key={group.appName} className="flex items-center gap-4 rounded-lg bg-surface-container p-4">
             <AppIconBadge appName={group.appName} size={40} />
             <div className="min-w-0 flex-1">
-              <p className="truncate text-base font-medium">{prettyAppName(group.appName)}</p>
+              <p className="truncate text-base font-medium">
+                {prettyAppName(group.appName) || t('appNames.noActiveWindow')}
+              </p>
               <p className="text-sm text-on-surface-variant">
                 {t('timeline.lastActive')} {t(ref.key, ref.params)}
               </p>

@@ -12,6 +12,8 @@ never trusting the numbers, so I built something that just runs in the
 background on my machine, watches which window I'm actually in, and figures
 out on its own what project/task that time belongs to.
 
+![Today dashboard](assets/screenshots/today.png)
+
 ## Why
 
 I need three things at once: where my time actually goes day to day, an
@@ -23,26 +25,35 @@ stays local — SQLite on disk, no cloud sync, no account.
 
 - **Automatic tracking.** Watches the focused window on Hyprland and records
   activity blocks as you work, splitting them on an AFK threshold you control.
-- **Today dashboard.** Weekly average, today's total, idle time, a Mon–Sun bar
-  chart, a GitHub-style month heatmap, and a per-app time breakdown — navigate
-  to any past day from the same screen.
+- **Today dashboard.** Weekly average, today's total, idle time, auto-detected
+  peak hours, a Mon–Sun bar chart, a GitHub-style month heatmap, and a
+  per-app time breakdown — navigate to any past day from the same screen.
+- **Per-app detail view.** Click any app on Today to see its own weekly
+  average, trend vs. yesterday, and an hourly usage chart showing what time
+  of day you actually use it.
 - **Timeline.** Every tracked activity for a day, either chronologically or
   grouped by app with "last active" recency. Reassign any block to a project
-  on the spot.
-- **Projects & tasks.** Track estimate vs. actual time per project, create/edit
-  projects and tasks, archive what you're done with.
+  (or a project with no specific task) right from the list.
+- **Projects & tasks.** Track estimate vs. actual time per project, create,
+  edit, and archive projects and tasks.
 - **Assignment rules.** A pannable, zoomable node graph connects app-name
   patterns to projects, so new activity gets auto-assigned instead of piling
   up unsorted.
 - **System tray.** Pause/resume tracking and jump between recent tasks without
   opening the window.
 - **Live theming.** Reads a [matugen](https://github.com/InioX/matugen)-generated
-  palette and re-themes the whole UI instantly when your wallpaper changes —
-  with a built-in fallback palette when matugen isn't set up.
+  palette and re-themes the whole UI instantly when your wallpaper changes,
+  with a built-in fallback palette when matugen isn't set up, and a manual
+  accent-color override if you'd rather pick your own.
 - **Real app icons.** Resolves each app's actual icon from your system's
-  `.desktop` files and icon theme, not a generic placeholder.
+  `.desktop` files and icon theme (including your own user-local icons), not
+  a generic placeholder.
+- **Personalization.** Name, avatar, interface scale, and a full English/
+  Russian translation, all in Settings — plus a first-run onboarding tour.
 - **Configurable navigation.** Sidebar, top tabs, or a Ctrl/Cmd+K command
   palette — pick whichever fits how you work.
+- **Developer mode.** Hidden behind a press-and-hold unlock in Settings —
+  DB path, app version, and a live log viewer once unlocked.
 
 ## Requirements
 
@@ -100,6 +111,8 @@ cd frontend && npx tsc --noEmit -p tsconfig.json && npm run build
 
 - Database: `~/.config/chronly/chronly.db` (SQLite, WAL mode). Override with
   the `CHRONLY_DB_PATH` environment variable.
+- Logs: `~/.config/chronly/chronly.log`, also viewable in Settings once
+  developer mode is unlocked.
 - Theme: reads `~/.config/colors/matugen/chronly.css`, written by matugen.
 
 ## License
