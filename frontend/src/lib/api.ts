@@ -5,6 +5,11 @@ import type { tracker } from '../../wailsjs/go/models'
 import { EventsOn } from '../../wailsjs/runtime/runtime'
 import { queryKeys } from './queryClient'
 
+export type Block = Omit<tracker.Block, 'StartTime' | 'EndTime'> & {
+  StartTime: string
+  EndTime: string
+}
+
 export const api = {
   listProjects: () => App.ListProjects(),
   listArchivedProjects: () => App.ListArchivedProjects(),
@@ -25,7 +30,7 @@ export const api = {
   setTrackingPaused: (paused: boolean) => App.SetTrackingPaused(paused),
 
   listActivityBlocksForRange: (start: string, end: string) =>
-    App.ListActivityBlocksForRange(start, end),
+    App.ListActivityBlocksForRange(start, end) as unknown as Promise<Block[]>,
   updateActivityBlockAssignment: (id: number, taskId: number | null) =>
     App.UpdateActivityBlockAssignment(id, taskId),
   splitActivityBlock: (id: number, splitAt: string) => App.SplitActivityBlock(id, splitAt),
