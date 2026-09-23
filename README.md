@@ -117,4 +117,4 @@ cd frontend && npx tsc --noEmit -p tsconfig.json && npm run build
 
 ## License
 
-Not yet decided.
+All rights reserved. See [LICENSE](LICENSE).
