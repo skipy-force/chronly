@@ -4,18 +4,12 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { api } from '../lib/api'
 import { queryKeys } from '../lib/queryClient'
 import { TimelineBar } from '../components/TimelineBar'
-
-function isoDateInput(d: Date): string {
-  const year = d.getFullYear()
-  const month = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
-}
+import { localDateKey } from '../lib/dates'
 
 function addDays(dateStr: string, delta: number): string {
   const d = new Date(dateStr + 'T00:00:00')
   d.setDate(d.getDate() + delta)
-  return isoDateInput(d)
+  return localDateKey(d)
 }
 
 function formatDateLabel(dateStr: string): string {
@@ -24,7 +18,7 @@ function formatDateLabel(dateStr: string): string {
 }
 
 export function TimelineScreen() {
-  const [date, setDate] = useState(() => isoDateInput(new Date()))
+  const [date, setDate] = useState(() => localDateKey(new Date()))
   const queryClient = useQueryClient()
 
   const start = new Date(date + 'T00:00:00').toISOString()

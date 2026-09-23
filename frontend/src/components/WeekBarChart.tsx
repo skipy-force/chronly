@@ -1,0 +1,27 @@
+interface WeekBarChartProps {
+  minutesByDay: number[]
+  labels: string[]
+  activeIndex: number
+}
+
+export function WeekBarChart({ minutesByDay, labels, activeIndex }: WeekBarChartProps) {
+  const max = Math.max(1, ...minutesByDay)
+
+  return (
+    <div className="flex h-full items-end gap-3 rounded-lg bg-surface-container p-4">
+      {minutesByDay.map((minutes, i) => (
+        <div key={i} className="flex flex-1 flex-col items-center gap-2">
+          <div className="flex h-24 w-full items-end overflow-hidden rounded-md bg-surface-container-high">
+            <div
+              className={`w-full rounded-md ${i === activeIndex ? 'bg-primary' : 'bg-outline/60'}`}
+              style={{ height: `${Math.max(4, (minutes / max) * 100)}%` }}
+            />
+          </div>
+          <span className={`text-xs ${i === activeIndex ? 'text-on-surface' : 'text-on-surface-variant'}`}>
+            {labels[i]}
+          </span>
+        </div>
+      ))}
+    </div>
+  )
+}
