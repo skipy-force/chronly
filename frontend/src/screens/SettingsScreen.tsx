@@ -25,7 +25,8 @@ const NAV_STYLE_INFO: Record<NavStyle, { label: string; description: string }> =
 const sectionVariants = fadeInVariants(0.35, 10)
 
 export function SettingsScreen() {
-  const { navStyle, setNavStyle } = useUiStore()
+  const { navStyle, setNavStyle, displayName, setDisplayName } = useUiStore()
+  const [nameInput, setNameInput] = useState(displayName)
   const queryClient = useQueryClient()
 
   const { data: tier } = useQuery({
@@ -66,6 +67,25 @@ export function SettingsScreen() {
       animate="show"
       variants={staggerContainer(0.06)}
     >
+      <motion.section variants={sectionVariants}>
+        <h2 className="mb-2 text-sm font-semibold uppercase text-on-surface-variant">Profile</h2>
+        <div className="flex items-center gap-2">
+          <input
+            value={nameInput}
+            onChange={(e) => setNameInput(e.target.value)}
+            placeholder="Your name"
+            className="w-48 rounded-md bg-surface-container px-3 py-1.5 text-sm outline-none focus:ring-1 focus:ring-primary"
+          />
+          <button
+            onClick={() => setDisplayName(nameInput.trim())}
+            className="rounded-pill bg-surface-container px-3 py-1.5 text-sm hover:bg-surface-container-high"
+          >
+            Save
+          </button>
+        </div>
+        <p className="mt-2 text-xs text-on-surface-variant">Shows in the sidebar and in the Today greeting.</p>
+      </motion.section>
+
       <motion.section variants={sectionVariants}>
         <h2 className="mb-2 text-sm font-semibold uppercase text-on-surface-variant">Navigation style</h2>
         <div className="flex gap-2">

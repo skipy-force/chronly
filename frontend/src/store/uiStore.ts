@@ -12,6 +12,8 @@ interface UiState {
   setNavStyle: (style: NavStyle) => void
   timelineView: TimelineView
   setTimelineView: (view: TimelineView) => void
+  displayName: string
+  setDisplayName: (name: string) => void
 }
 
 export const useUiStore = create<UiState>()(
@@ -23,6 +25,8 @@ export const useUiStore = create<UiState>()(
       setNavStyle: (style) => set({ navStyle: style }),
       timelineView: 'time',
       setTimelineView: (view) => set({ timelineView: view }),
+      displayName: '',
+      setDisplayName: (name) => set({ displayName: name }),
     }),
     { name: 'chronly-ui' },
   ),

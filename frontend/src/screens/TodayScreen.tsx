@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight, Pause, Play } from 'lucide-react'
 import { api } from '../lib/api'
 import { queryKeys } from '../lib/queryClient'
 import { useElapsedSince } from '../lib/useTicker'
+import { useUiStore } from '../store/uiStore'
 import { WeekBarChart } from '../components/WeekBarChart'
 import { MonthHeatmap } from '../components/MonthHeatmap'
 import { AppBreakdownList } from '../components/AppBreakdownList'
@@ -12,7 +13,7 @@ import { AppDetailView } from '../components/AppDetailView'
 import { DatePicker } from '../components/DatePicker'
 import { prettyAppName } from '../lib/appNames'
 import { fadeInVariants, staggerContainer } from '../lib/motion'
-import { localDateKey, addDays, formatHoursMinutes } from '../lib/dates'
+import { localDateKey, addDays, formatHoursMinutes, greeting } from '../lib/dates'
 import {
   blockMinutes,
   minutesByDayFromBlocks,
@@ -32,6 +33,7 @@ function endOfDay(d: Date): Date {
 
 export function TodayScreen() {
   const queryClient = useQueryClient()
+  const { displayName } = useUiStore()
   const actualNow = useMemo(() => new Date(), [])
   const actualTodayKey = localDateKey(actualNow)
 
@@ -128,6 +130,11 @@ export function TodayScreen() {
     <div className="flex h-full flex-col gap-4 overflow-y-auto p-6">
       <div className="flex items-center justify-between">
         <div>
+          {isViewingToday && displayName && (
+            <p className="text-xs text-on-surface-variant">
+              {greeting(actualNow)}, {displayName}
+            </p>
+          )}
           <div className="flex items-center gap-1">
             <button
               onClick={() => setSelectedKey((k) => localDateKey(addDays(new Date(k + 'T00:00:00'), -1)))}
@@ -151,15 +158,7 @@ export function TodayScreen() {
             <p className="text-xs text-on-surface-variant">Viewing history</p>
           )}
         </div>
-        {isViewingToday && (
-          <button
-            onClick={() => pauseMutation.mutate(!appState?.TrackingPaused)}
-            className="flex items-center gap-2 rounded-pill bg-surface-container px-4 py-2 text-sm hover:bg-surface-container-high"
-          >
-            {tracking ? <Pause size={16} /> : <Play size={16} />}
-            {tracking ? 'Pause' : 'Resume'}
-          </button>
-        )}
+        {isViewingToday && <PauseResumeButton tracking={tracking} onToggle={() => pauseMutation.mutate(tracking)} />}
       </div>
 
       <AnimatePresence mode="wait">
@@ -201,6 +200,41 @@ function StatCard({ label, value }: { label: string; value: string }) {
       <p className="text-xs text-on-surface-variant">{label}</p>
       <p className="mt-1 text-2xl font-semibold">{value}</p>
     </div>
+  )
+}
+
+function PauseResumeButton({ tracking, onToggle }: { tracking: boolean; onToggle: () => void }) {
+  return (
+    <motion.button
+      onClick={onToggle}
+      whileTap={{ scale: 0.94 }}
+      className={`relative flex items-center gap-2 overflow-hidden rounded-pill px-4 py-2 text-sm transition-colors duration-300 ${
+        tracking
+          ? 'bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25'
+          : 'bg-red-500/15 text-red-400 hover:bg-red-500/25'
+      }`}
+    >
+      {tracking && (
+        <motion.span
+          className="absolute inset-0 rounded-pill bg-emerald-500/25"
+          animate={{ opacity: [0.6, 0, 0.6], scale: [1, 1.12, 1] }}
+          transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+        />
+      )}
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.span
+          key={tracking ? 'pause' : 'resume'}
+          initial={{ opacity: 0, rotate: -90, scale: 0.5 }}
+          animate={{ opacity: 1, rotate: 0, scale: 1 }}
+          exit={{ opacity: 0, rotate: 90, scale: 0.5 }}
+          transition={{ duration: 0.25 }}
+          className="relative flex items-center gap-2"
+        >
+          {tracking ? <Pause size={16} /> : <Play size={16} />}
+          {tracking ? 'Pause' : 'Resume'}
+        </motion.span>
+      </AnimatePresence>
+    </motion.button>
   )
 }
 

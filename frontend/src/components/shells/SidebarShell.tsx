@@ -5,15 +5,15 @@ import { SCREENS, useUiStore } from '../../store/uiStore'
 import { SCREEN_ICONS } from '../../lib/screenIcons'
 
 export function SidebarShell({ children }: { children: ReactNode }) {
-  const { activeScreen, setActiveScreen } = useUiStore()
+  const { activeScreen, setActiveScreen, displayName } = useUiStore()
   return (
     <div className="flex h-screen bg-surface text-on-surface">
       <nav className="flex w-44 flex-col gap-1 bg-surface-container/40 p-3">
         <div className="mb-3 flex items-center gap-2 px-2">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-surface-container-high text-on-surface-variant">
-            <User size={16} />
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-surface-container-high text-sm font-semibold text-on-surface-variant">
+            {displayName ? displayName.charAt(0).toUpperCase() : <User size={16} />}
           </div>
-          <span className="text-sm font-semibold">chronly</span>
+          <span className="truncate text-sm font-semibold">{displayName || 'chronly'}</span>
         </div>
 
         {SCREENS.map((screen) => {

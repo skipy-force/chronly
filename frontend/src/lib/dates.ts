@@ -45,6 +45,15 @@ export function formatRelativeTime(d: Date, now: Date): string {
   return `${diffDays}d ago`
 }
 
+export function greeting(now: Date): string {
+  const hour = now.getHours()
+  if (hour < 5) return 'Good night'
+  if (hour < 12) return 'Good morning'
+  if (hour < 18) return 'Good afternoon'
+  if (hour < 22) return 'Good evening'
+  return 'Good night'
+}
+
 export function formatHoursMinutes(totalMinutes: number): string {
   const h = Math.floor(totalMinutes / 60)
   const m = Math.round(totalMinutes % 60)
