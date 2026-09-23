@@ -55,7 +55,7 @@ function titleCaseFromSegment(raw: string): string {
 }
 
 export function prettyAppName(raw: string): string {
-  if (!raw) return 'Unknown'
+  if (!raw) return 'No active window'
   const lower = raw.toLowerCase()
   if (OVERRIDES[lower]) return OVERRIDES[lower]
   return titleCaseFromSegment(raw)

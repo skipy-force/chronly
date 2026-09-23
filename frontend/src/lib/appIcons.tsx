@@ -8,6 +8,7 @@ import {
   Image,
   Mail,
   MessageCircle,
+  Monitor,
   Music,
   FileText,
   Terminal,
@@ -51,6 +52,7 @@ const ACCENT_CLASSES: Record<AppIconMatch['accent'], string> = {
 }
 
 export function resolveAppIcon(appName: string): { Icon: LucideIcon; className: string } {
+  if (!appName) return { Icon: Monitor, className: 'bg-surface-container-high text-on-surface-variant' }
   const lower = appName.toLowerCase()
   const match = MATCHES.find((m) => m.keywords.some((k) => lower.includes(k)))
   if (match) return { Icon: match.icon, className: ACCENT_CLASSES[match.accent] }
