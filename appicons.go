@@ -75,11 +75,31 @@ func resolveAppIconDataURI(appName string) string {
 	return "data:" + mime + ";base64," + base64.StdEncoding.EncodeToString(data)
 }
 
+func iconThemeBaseDirs() []string {
+	var dirs []string
+	dataHome := os.Getenv("XDG_DATA_HOME")
+	if dataHome == "" {
+		if home, err := os.UserHomeDir(); err == nil {
+			dataHome = filepath.Join(home, ".local", "share")
+		}
+	}
+	if dataHome != "" {
+		dirs = append(dirs, filepath.Join(dataHome, "icons"))
+	}
+	if home, err := os.UserHomeDir(); err == nil {
+		dirs = append(dirs, filepath.Join(home, ".icons"))
+	}
+	dirs = append(dirs, "/usr/share/icons")
+	return dirs
+}
+
 func findIconFile(iconName string, themeNames []string) string {
 	for _, theme := range themeNames {
-		root := filepath.Join("/usr/share/icons", theme)
-		if paths := candidateIconPaths(root, iconName); len(paths) > 0 {
-			return appicons.PreferredIconPath(paths)
+		for _, base := range iconThemeBaseDirs() {
+			root := filepath.Join(base, theme)
+			if paths := candidateIconPaths(root, iconName); len(paths) > 0 {
+				return appicons.PreferredIconPath(paths)
+			}
 		}
 	}
 	for _, ext := range []string{".svg", ".png"} {
