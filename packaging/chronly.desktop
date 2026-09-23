@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=chronly
+Comment=Automatic desktop time tracker for Hyprland
+Exec=chronly
+Icon=chronly
+Terminal=false
+Categories=Utility;Office;
+StartupWMClass=chronly

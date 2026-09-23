@@ -1,0 +1,38 @@
+# Maintainer: skipy-force
+pkgname=chronly
+pkgver=0.1.1.alpha
+pkgrel=1
+pkgdesc="Automatic desktop time tracker for Hyprland — watches your active window, builds a Today dashboard, timeline, and per-project estimate-vs-actual, no manual timers"
+arch=('x86_64')
+url="https://github.com/skipy-force/chronly"
+license=('LicenseRef-All-Rights-Reserved')
+depends=('webkit2gtk-4.1' 'gtk3')
+optdepends=('hyprland: required at runtime, window tracking talks to its IPC socket directly'
+            'matugen: live theme re-coloring from your wallpaper')
+makedepends=('go' 'nodejs' 'npm')
+options=('!lto')
+source=("$pkgname-$pkgver.tar.gz::https://github.com/skipy-force/chronly/archive/refs/tags/v0.1.1-alpha.tar.gz")
+sha256sums=('1b377335c770b83e4d6c7f94a5a9ac1c0707312efd67ac9f6cd140601de7585f')
+
+build() {
+  cd "$pkgname-0.1.1-alpha"
+
+  cd frontend
+  npm ci
+  npm run build
+  cd ..
+
+  export CGO_ENABLED=1
+  export GOFLAGS="-buildmode=pie -trimpath -mod=readonly -modcacherw"
+  go build -tags webkit2_41 -ldflags "-linkmode=external -extldflags \"${LDFLAGS}\" -s -w" -o build/bin/chronly .
+}
+
+package() {
+  cd "$pkgname-0.1.1-alpha"
+
+  install -Dm755 build/bin/chronly "$pkgdir/usr/bin/chronly"
+  install -Dm644 packaging/chronly.desktop "$pkgdir/usr/share/applications/chronly.desktop"
+  install -Dm644 assets/icon.svg "$pkgdir/usr/share/icons/hicolor/scalable/apps/chronly.svg"
+  install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+  install -Dm644 README.md "$pkgdir/usr/share/doc/$pkgname/README.md"
+}
