@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { api } from '../lib/api'
 import { queryKeys } from '../lib/queryClient'
 import { TimelineBar } from '../components/TimelineBar'
@@ -9,6 +10,17 @@ function isoDateInput(d: Date): string {
   const month = String(d.getMonth() + 1).padStart(2, '0')
   const day = String(d.getDate()).padStart(2, '0')
   return `${year}-${month}-${day}`
+}
+
+function addDays(dateStr: string, delta: number): string {
+  const d = new Date(dateStr + 'T00:00:00')
+  d.setDate(d.getDate() + delta)
+  return isoDateInput(d)
+}
+
+function formatDateLabel(dateStr: string): string {
+  const d = new Date(dateStr + 'T00:00:00')
+  return d.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })
 }
 
 export function TimelineScreen() {
@@ -41,13 +53,30 @@ export function TimelineScreen() {
   return (
     <div className="flex h-full flex-col gap-4 p-6">
       <div>
-        <div className="flex items-center gap-2">
-          <input
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            className="rounded-pill bg-surface-container px-3 py-1.5 text-sm"
-          />
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => setDate((d) => addDays(d, -1))}
+            className="rounded-pill p-1.5 text-on-surface-variant hover:bg-surface-container"
+          >
+            <ChevronLeft size={16} />
+          </button>
+          <div className="relative">
+            <span className="pointer-events-none block rounded-pill bg-surface-container px-3 py-1.5 text-sm">
+              {formatDateLabel(date)}
+            </span>
+            <input
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              className="absolute inset-0 cursor-pointer opacity-0"
+            />
+          </div>
+          <button
+            onClick={() => setDate((d) => addDays(d, 1))}
+            className="rounded-pill p-1.5 text-on-surface-variant hover:bg-surface-container"
+          >
+            <ChevronRight size={16} />
+          </button>
         </div>
         <p className="mt-2 text-xs text-on-surface-variant">
           Each bar is one tracked activity block, positioned by actual time of day. Click a bar to assign it to a
