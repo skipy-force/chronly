@@ -18,9 +18,11 @@ import (
 )
 
 const (
-	afkThreshold      = 3 * time.Minute
-	waylandIdleMillis = 60000
-	AppVersion        = "0.1.0-alpha"
+	afkThreshold          = 3 * time.Minute
+	waylandIdleMillis     = 60000
+	AppVersion            = "0.1.0-alpha"
+	compactionCutoffDelay = 15 * time.Minute
+	compactionInterval    = 6 * time.Hour
 )
 
 var openFileManager = func(dir string) error {
@@ -87,8 +89,43 @@ func (a *App) startup(ctx context.Context) {
 		log.Printf("theme watcher unavailable: %v", err)
 	}
 
+	go a.runCompactionLoop(runCtx)
+
 	a.tray = newTray(a)
 	go a.tray.run()
+}
+
+func (a *App) runCompactionLoop(ctx context.Context) {
+	a.compactOnce(true)
+
+	ticker := time.NewTicker(compactionInterval)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			a.compactOnce(false)
+		}
+	}
+}
+
+func (a *App) compactOnce(vacuum bool) {
+	cutoff := time.Now().UTC().Add(-compactionCutoffDelay)
+	merged, deleted, err := a.store.CompactActivityBlocks(cutoff)
+	if err != nil {
+		log.Printf("compact activity blocks: %v", err)
+		return
+	}
+	if deleted == 0 {
+		return
+	}
+	log.Printf("compacted activity blocks: merged=%d deleted=%d", merged, deleted)
+	if vacuum {
+		if err := a.store.Vacuum(); err != nil {
+			log.Printf("vacuum: %v", err)
+		}
+	}
 }
 
 func (a *App) shutdown(ctx context.Context) {

@@ -254,6 +254,183 @@ func TestSplitActivityBlock_CreatesTwoBlocks(t *testing.T) {
 	}
 }
 
+func TestCompactActivityBlocks_MergesConsecutiveSameAppBlocksBeforeCutoff(t *testing.T) {
+	s := newTestStore(t)
+	start := time.Date(2026, 1, 1, 12, 0, 0, 0, time.UTC)
+	block := func(offset time.Duration, title string) {
+		t.Helper()
+		if _, err := s.SaveActivityBlock(
+			tracker.Block{StartTime: start.Add(offset), EndTime: start.Add(offset + time.Minute), AppName: "kitty", WindowTitle: title},
+			tracker.Assignment{},
+		); err != nil {
+			t.Fatal(err)
+		}
+	}
+	block(0, "a")
+	block(time.Minute, "b")
+	block(2*time.Minute, "c")
+
+	cutoff := start.Add(time.Hour)
+	merged, deleted, err := s.CompactActivityBlocks(cutoff)
+	if err != nil {
+		t.Fatalf("CompactActivityBlocks: %v", err)
+	}
+	if merged != 1 || deleted != 2 {
+		t.Fatalf("expected merged=1 deleted=2, got merged=%d deleted=%d", merged, deleted)
+	}
+
+	var count int
+	if err := s.db.QueryRow(`SELECT COUNT(*) FROM activity_blocks WHERE app_name = 'kitty'`).Scan(&count); err != nil {
+		t.Fatal(err)
+	}
+	if count != 1 {
+		t.Fatalf("expected 1 remaining row, got %d", count)
+	}
+
+	var gotStart, gotEnd time.Time
+	var gotTitle string
+	if err := s.db.QueryRow(`SELECT start_time, end_time, window_title FROM activity_blocks WHERE app_name = 'kitty'`).
+		Scan(&gotStart, &gotEnd, &gotTitle); err != nil {
+		t.Fatal(err)
+	}
+	if !gotStart.Equal(start) || !gotEnd.Equal(start.Add(3*time.Minute)) || gotTitle != "c" {
+		t.Fatalf("expected merged block start=%v end=%v title=c, got start=%v end=%v title=%s",
+			start, start.Add(3*time.Minute), gotStart, gotEnd, gotTitle)
+	}
+}
+
+func TestCompactActivityBlocks_DoesNotMergeAcrossAppChange(t *testing.T) {
+	s := newTestStore(t)
+	start := time.Date(2026, 1, 1, 12, 0, 0, 0, time.UTC)
+	if _, err := s.SaveActivityBlock(
+		tracker.Block{StartTime: start, EndTime: start.Add(time.Minute), AppName: "kitty", WindowTitle: "a"},
+		tracker.Assignment{},
+	); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := s.SaveActivityBlock(
+		tracker.Block{StartTime: start.Add(time.Minute), EndTime: start.Add(2 * time.Minute), AppName: "firefox", WindowTitle: "b"},
+		tracker.Assignment{},
+	); err != nil {
+		t.Fatal(err)
+	}
+
+	merged, deleted, err := s.CompactActivityBlocks(start.Add(time.Hour))
+	if err != nil {
+		t.Fatalf("CompactActivityBlocks: %v", err)
+	}
+	if merged != 0 || deleted != 0 {
+		t.Fatalf("expected no merges across an app change, got merged=%d deleted=%d", merged, deleted)
+	}
+}
+
+func TestCompactActivityBlocks_DoesNotMergeAcrossLargeGap(t *testing.T) {
+	s := newTestStore(t)
+	start := time.Date(2026, 1, 1, 12, 0, 0, 0, time.UTC)
+	if _, err := s.SaveActivityBlock(
+		tracker.Block{StartTime: start, EndTime: start.Add(time.Minute), AppName: "kitty", WindowTitle: "a"},
+		tracker.Assignment{},
+	); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := s.SaveActivityBlock(
+		tracker.Block{StartTime: start.Add(time.Minute + 10*time.Second), EndTime: start.Add(2 * time.Minute), AppName: "kitty", WindowTitle: "b"},
+		tracker.Assignment{},
+	); err != nil {
+		t.Fatal(err)
+	}
+
+	merged, deleted, err := s.CompactActivityBlocks(start.Add(time.Hour))
+	if err != nil {
+		t.Fatalf("CompactActivityBlocks: %v", err)
+	}
+	if merged != 0 || deleted != 0 {
+		t.Fatalf("expected no merge across a gap larger than the threshold, got merged=%d deleted=%d", merged, deleted)
+	}
+}
+
+func TestCompactActivityBlocks_IgnoresBlocksAtOrAfterCutoff(t *testing.T) {
+	s := newTestStore(t)
+	start := time.Date(2026, 1, 1, 12, 0, 0, 0, time.UTC)
+	if _, err := s.SaveActivityBlock(
+		tracker.Block{StartTime: start, EndTime: start.Add(time.Minute), AppName: "kitty", WindowTitle: "a"},
+		tracker.Assignment{},
+	); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := s.SaveActivityBlock(
+		tracker.Block{StartTime: start.Add(time.Minute), EndTime: start.Add(2 * time.Minute), AppName: "kitty", WindowTitle: "b"},
+		tracker.Assignment{},
+	); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := s.SaveActivityBlock(
+		tracker.Block{StartTime: start.Add(2 * time.Minute), EndTime: start.Add(3 * time.Minute), AppName: "kitty", WindowTitle: "c"},
+		tracker.Assignment{},
+	); err != nil {
+		t.Fatal(err)
+	}
+
+	merged, deleted, err := s.CompactActivityBlocks(start.Add(90 * time.Second))
+	if err != nil {
+		t.Fatalf("CompactActivityBlocks: %v", err)
+	}
+	if merged != 1 || deleted != 1 {
+		t.Fatalf("expected the two blocks before cutoff to merge, got merged=%d deleted=%d", merged, deleted)
+	}
+
+	var count int
+	if err := s.db.QueryRow(`SELECT COUNT(*) FROM activity_blocks WHERE app_name = 'kitty'`).Scan(&count); err != nil {
+		t.Fatal(err)
+	}
+	if count != 2 {
+		t.Fatalf("expected 2 remaining rows (merged pair + untouched block c), got %d", count)
+	}
+
+	var gotTitle string
+	if err := s.db.QueryRow(`SELECT window_title FROM activity_blocks WHERE start_time = ?`, start.Add(2*time.Minute)).
+		Scan(&gotTitle); err != nil {
+		t.Fatalf("expected block c untouched at its original start_time: %v", err)
+	}
+	if gotTitle != "c" {
+		t.Fatalf("expected block c untouched, got title=%s", gotTitle)
+	}
+}
+
+func TestCompactActivityBlocks_DoesNotMergeDifferentAssignment(t *testing.T) {
+	s := newTestStore(t)
+	if _, err := s.db.Exec(`INSERT INTO projects (id, name) VALUES (1, 'a')`); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := s.db.Exec(`INSERT INTO tasks (id, project_id, name) VALUES (10, 1, 't')`); err != nil {
+		t.Fatal(err)
+	}
+	start := time.Date(2026, 1, 1, 12, 0, 0, 0, time.UTC)
+	taskID := int64(10)
+	projectID := int64(1)
+	assignedBy := "manual"
+	if _, err := s.SaveActivityBlock(
+		tracker.Block{StartTime: start, EndTime: start.Add(time.Minute), AppName: "kitty", WindowTitle: "a"},
+		tracker.Assignment{},
+	); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := s.SaveActivityBlock(
+		tracker.Block{StartTime: start.Add(time.Minute), EndTime: start.Add(2 * time.Minute), AppName: "kitty", WindowTitle: "b"},
+		tracker.Assignment{TaskID: &taskID, ProjectID: &projectID, AssignedBy: &assignedBy},
+	); err != nil {
+		t.Fatal(err)
+	}
+
+	merged, deleted, err := s.CompactActivityBlocks(start.Add(time.Hour))
+	if err != nil {
+		t.Fatalf("CompactActivityBlocks: %v", err)
+	}
+	if merged != 0 || deleted != 0 {
+		t.Fatalf("expected no merge across different assignments, got merged=%d deleted=%d", merged, deleted)
+	}
+}
+
 func TestSplitActivityBlock_RejectsSplitOutsideRange(t *testing.T) {
 	s := newTestStore(t)
 	start := time.Date(2026, 1, 1, 12, 0, 0, 0, time.UTC)
