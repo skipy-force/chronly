@@ -19,17 +19,35 @@ const CENTER = SIZE / 2
 const HUB_RADIUS = 104
 const RAY_START = HUB_RADIUS + 6
 const RAY_END = 200
-const ORBIT_DURATION = 50
+const ORBIT_DURATION = 140
+const WAVE_AMPLITUDE = 10
 
-function rayPath(angleDeg: number): string {
+function pointAt(angleDeg: number, radius: number): { x: number; y: number } {
   const rad = (angleDeg * Math.PI) / 180
-  const startX = CENTER + Math.cos(rad) * RAY_START
-  const startY = CENTER + Math.sin(rad) * RAY_START
-  const endX = CENTER + Math.cos(rad) * RAY_END
-  const endY = CENTER + Math.sin(rad) * RAY_END
-  const midX = CENTER + Math.cos(rad) * ((RAY_START + RAY_END) / 2) + Math.sin(rad) * 14
-  const midY = CENTER + Math.sin(rad) * ((RAY_START + RAY_END) / 2) - Math.cos(rad) * 14
-  return `M ${startX} ${startY} Q ${midX} ${midY} ${endX} ${endY}`
+  return { x: CENTER + Math.cos(rad) * radius, y: CENTER + Math.sin(rad) * radius }
+}
+
+// A gentle S-wave from hub to satellite: one cubic bezier whose two control
+// points sit at 1/3 and 2/3 along the ray, nudged to opposite sides
+// perpendicular to it, instead of a straight chord.
+function wavePath(angleDeg: number): string {
+  const rad = (angleDeg * Math.PI) / 180
+  const dirX = Math.cos(rad)
+  const dirY = Math.sin(rad)
+  const perpX = -dirY
+  const perpY = dirX
+
+  const start = pointAt(angleDeg, RAY_START)
+  const end = pointAt(angleDeg, RAY_END)
+  const oneThird = RAY_START + (RAY_END - RAY_START) / 3
+  const twoThirds = RAY_START + ((RAY_END - RAY_START) * 2) / 3
+
+  const c1x = CENTER + dirX * oneThird + perpX * WAVE_AMPLITUDE
+  const c1y = CENTER + dirY * oneThird + perpY * WAVE_AMPLITUDE
+  const c2x = CENTER + dirX * twoThirds - perpX * WAVE_AMPLITUDE
+  const c2y = CENTER + dirY * twoThirds - perpY * WAVE_AMPLITUDE
+
+  return `M ${start.x} ${start.y} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${end.x} ${end.y}`
 }
 
 export function RadialHub({ centerLabel, centerValue, satellites, onCenterClick }: RadialHubProps) {
@@ -45,11 +63,10 @@ export function RadialHub({ centerLabel, centerValue, satellites, onCenterClick 
         whileHover={{ scale: 1.03 }}
         className="absolute z-10 flex flex-col items-center justify-center rounded-full bg-gradient-to-br from-primary to-secondary text-surface shadow-2xl"
         style={{
-          left: CENTER,
-          top: CENTER,
+          left: CENTER - HUB_RADIUS,
+          top: CENTER - HUB_RADIUS,
           width: HUB_RADIUS * 2,
           height: HUB_RADIUS * 2,
-          transform: 'translate(-50%, -50%)',
         }}
       >
         <span className="text-lg font-semibold">{centerLabel}</span>
@@ -63,22 +80,12 @@ export function RadialHub({ centerLabel, centerValue, satellites, onCenterClick 
       >
         <svg viewBox={`0 0 ${SIZE} ${SIZE}`} width={SIZE} height={SIZE} className="absolute inset-0">
           {satellites.map((s) => (
-            <motion.path
-              key={s.id}
-              d={rayPath(s.angleDeg)}
-              className="fill-none stroke-primary/40"
-              strokeWidth="1.5"
-              initial={{ pathLength: 0 }}
-              animate={{ pathLength: 1 }}
-              transition={{ duration: 0.8, ease: 'easeOut' }}
-            />
+            <path key={s.id} d={wavePath(s.angleDeg)} className="fill-none stroke-primary/50" strokeWidth="1" />
           ))}
         </svg>
 
         {satellites.map((s) => {
-          const rad = (s.angleDeg * Math.PI) / 180
-          const x = CENTER + Math.cos(rad) * RAY_END
-          const y = CENTER + Math.sin(rad) * RAY_END
+          const { x, y } = pointAt(s.angleDeg, RAY_END)
           return (
             <div
               key={s.id}
