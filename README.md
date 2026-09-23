@@ -40,10 +40,13 @@ In progress:
 - Go 1.25 backend, split into `backend/tracker` (pure domain logic, OS deps
   isolated to platform-tagged files) and `backend/storage` (SQLite)
 - `modernc.org/sqlite` — pure Go driver, no CGO, so cross-compiling for
-  Windows/macOS later stays simple. The one exception is the tray
-  (`github.com/getlantern/systray`), which needs CGO + GTK3/appindicator on
-  Linux — that's a build-time/runtime dependency of the desktop shell, not
-  of the engine itself.
+  Windows/macOS later stays simple. The tray (`github.com/energye/systray`)
+  is pure Go on Linux too — it talks the StatusNotifierItem/DBusMenu D-Bus
+  protocols directly instead of going through GTK, which matters because
+  Wails' own webview already runs a GTK main loop on Linux, and a second,
+  independent one (as `github.com/getlantern/systray` uses via
+  libappindicator) reliably aborts the process — confirmed by hand before
+  switching libraries.
 - Hyprland's own IPC socket for window tracking (not the generic
   `wlr-foreign-toplevel-management` protocol) — Linux/Hyprland only for now
 - Wails v2 for the desktop shell; React frontend still pending

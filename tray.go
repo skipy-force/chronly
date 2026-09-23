@@ -3,12 +3,11 @@ package main
 import (
 	_ "embed"
 	"fmt"
-	"runtime"
 	"time"
 
 	"chronly/backend/tracker"
 
-	"github.com/getlantern/systray"
+	"github.com/energye/systray"
 	wailsruntime "github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
@@ -34,7 +33,6 @@ func newTray(app *App) *Tray {
 }
 
 func (t *Tray) run() {
-	runtime.LockOSThread()
 	systray.Run(t.onReady, t.onExit)
 }
 
@@ -48,6 +46,7 @@ func (t *Tray) onReady() {
 
 	systray.AddSeparator()
 	t.pause = systray.AddMenuItemCheckbox("Pause tracking", "", false)
+	t.pause.Click(t.onPauseClicked)
 
 	systray.AddSeparator()
 	switchTask := systray.AddMenuItem("Switch task", "")
@@ -55,16 +54,15 @@ func (t *Tray) onReady() {
 		item := switchTask.AddSubMenuItem("", "")
 		item.Hide()
 		t.slots[i].item = item
-		go t.watchSlot(i)
+		item.Click(t.onSlotClicked(i))
 	}
 
 	systray.AddSeparator()
 	open := systray.AddMenuItem("Open chronly", "")
+	open.Click(t.onOpenClicked)
 	quit := systray.AddMenuItem("Quit", "")
+	quit.Click(t.onQuitClicked)
 
-	go t.watchPause()
-	go t.watchOpen(open)
-	go t.watchQuit(quit)
 	go t.refreshLoop()
 
 	t.refresh()
@@ -72,40 +70,35 @@ func (t *Tray) onReady() {
 
 func (t *Tray) onExit() {}
 
-func (t *Tray) watchPause() {
-	for range t.pause.ClickedCh {
-		paused := !t.pause.Checked()
-		if err := t.app.store.SetTrackingPaused(paused); err != nil {
-			continue
-		}
-		t.refresh()
+func (t *Tray) onPauseClicked() {
+	paused := !t.pause.Checked()
+	if err := t.app.store.SetTrackingPaused(paused); err != nil {
+		return
+	}
+	t.refresh()
+}
+
+func (t *Tray) onOpenClicked() {
+	if t.app.ctx != nil {
+		wailsruntime.WindowShow(t.app.ctx)
 	}
 }
 
-func (t *Tray) watchOpen(item *systray.MenuItem) {
-	for range item.ClickedCh {
-		if t.app.ctx != nil {
-			wailsruntime.WindowShow(t.app.ctx)
-		}
-	}
-}
-
-func (t *Tray) watchQuit(item *systray.MenuItem) {
-	<-item.ClickedCh
+func (t *Tray) onQuitClicked() {
 	if t.app.ctx != nil {
 		wailsruntime.Quit(t.app.ctx)
 	}
 	systray.Quit()
 }
 
-func (t *Tray) watchSlot(i int) {
-	for range t.slots[i].item.ClickedCh {
+func (t *Tray) onSlotClicked(i int) func() {
+	return func() {
 		taskID := t.slots[i].taskID
 		if taskID == 0 {
-			continue
+			return
 		}
 		if err := t.app.store.SetCurrentTask(&taskID); err != nil {
-			continue
+			return
 		}
 		t.refresh()
 	}
