@@ -1,7 +1,8 @@
 import type { Block } from '../lib/api'
 import { AppIconBadge } from '../lib/appIcons'
 import { prettyAppName } from '../lib/appNames'
-import { formatHoursMinutes, formatRelativeTime } from '../lib/dates'
+import { formatHoursMinutes, relativeTimeRef } from '../lib/dates'
+import { useT } from '../lib/i18n'
 
 interface TimelineByAppProps {
   blocks: Block[]
@@ -14,6 +15,7 @@ interface AppGroup {
 }
 
 export function TimelineByApp({ blocks }: TimelineByAppProps) {
+  const t = useT()
   const now = new Date()
   const groups = new Map<string, AppGroup>()
 
@@ -36,23 +38,28 @@ export function TimelineByApp({ blocks }: TimelineByAppProps) {
   if (sorted.length === 0) {
     return (
       <div className="flex h-40 items-center justify-center rounded-lg bg-surface-container text-sm text-on-surface-variant">
-        No activity tracked on this day
+        {t('timeline.empty')}
       </div>
     )
   }
 
   return (
     <div className="flex h-full flex-col gap-2 overflow-y-auto">
-      {sorted.map((group) => (
-        <div key={group.appName} className="flex items-center gap-4 rounded-lg bg-surface-container p-4">
-          <AppIconBadge appName={group.appName} size={40} />
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-base font-medium">{prettyAppName(group.appName)}</p>
-            <p className="text-sm text-on-surface-variant">last active {formatRelativeTime(group.lastEnd, now)}</p>
+      {sorted.map((group) => {
+        const ref = relativeTimeRef(group.lastEnd, now)
+        return (
+          <div key={group.appName} className="flex items-center gap-4 rounded-lg bg-surface-container p-4">
+            <AppIconBadge appName={group.appName} size={40} />
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-base font-medium">{prettyAppName(group.appName)}</p>
+              <p className="text-sm text-on-surface-variant">
+                {t('timeline.lastActive')} {t(ref.key, ref.params)}
+              </p>
+            </div>
+            <span className="shrink-0 font-mono text-lg font-semibold">{formatHoursMinutes(group.totalMinutes)}</span>
           </div>
-          <span className="shrink-0 font-mono text-lg font-semibold">{formatHoursMinutes(group.totalMinutes)}</span>
-        </div>
-      ))}
+        )
+      })}
     </div>
   )
 }

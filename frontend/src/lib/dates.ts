@@ -34,24 +34,33 @@ export function formatClockTime(d: Date): string {
   return `${h}:${m}`
 }
 
-export function formatRelativeTime(d: Date, now: Date): string {
-  const diffMs = now.getTime() - d.getTime()
-  const diffMin = Math.round(diffMs / 60000)
-  if (diffMin < 1) return 'just now'
-  if (diffMin < 60) return `${diffMin}m ago`
-  const diffHours = Math.round(diffMin / 60)
-  if (diffHours < 24) return `${diffHours}h ago`
-  const diffDays = Math.round(diffHours / 24)
-  return `${diffDays}d ago`
+export interface TranslationRef {
+  key: string
+  params?: Record<string, string | number>
 }
 
-export function greeting(now: Date): string {
+export function relativeTimeRef(d: Date, now: Date): TranslationRef {
+  const diffMs = now.getTime() - d.getTime()
+  const diffMin = Math.round(diffMs / 60000)
+  if (diffMin < 1) return { key: 'time.justNow' }
+  if (diffMin < 60) return { key: 'time.minutesAgo', params: { n: diffMin } }
+  const diffHours = Math.round(diffMin / 60)
+  if (diffHours < 24) return { key: 'time.hoursAgo', params: { n: diffHours } }
+  const diffDays = Math.round(diffHours / 24)
+  return { key: 'time.daysAgo', params: { n: diffDays } }
+}
+
+export function greetingKey(now: Date): string {
   const hour = now.getHours()
-  if (hour < 5) return 'Good night'
-  if (hour < 12) return 'Good morning'
-  if (hour < 18) return 'Good afternoon'
-  if (hour < 22) return 'Good evening'
-  return 'Good night'
+  if (hour < 5) return 'greeting.night'
+  if (hour < 12) return 'greeting.morning'
+  if (hour < 18) return 'greeting.afternoon'
+  if (hour < 22) return 'greeting.evening'
+  return 'greeting.night'
+}
+
+export function localeForLang(lang: 'en' | 'ru'): string {
+  return lang === 'ru' ? 'ru-RU' : 'en-US'
 }
 
 export function formatHoursMinutes(totalMinutes: number): string {

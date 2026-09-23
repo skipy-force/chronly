@@ -4,6 +4,7 @@ import type { Block } from '../lib/api'
 import { AppIconBadge } from '../lib/appIcons'
 import { prettyAppName } from '../lib/appNames'
 import { formatClockTime, formatHoursMinutes } from '../lib/dates'
+import { useT } from '../lib/i18n'
 
 interface TimelineListProps {
   blocks: Block[]
@@ -13,6 +14,7 @@ interface TimelineListProps {
 const ROW_HEIGHT = 80
 
 export function TimelineList({ blocks, onSelect }: TimelineListProps) {
+  const t = useT()
   const parentRef = useRef<HTMLDivElement>(null)
 
   const virtualizer = useVirtualizer({
@@ -25,7 +27,7 @@ export function TimelineList({ blocks, onSelect }: TimelineListProps) {
   if (blocks.length === 0) {
     return (
       <div className="flex h-40 items-center justify-center rounded-lg bg-surface-container text-sm text-on-surface-variant">
-        No activity tracked on this day
+        {t('timeline.empty')}
       </div>
     )
   }
@@ -56,7 +58,7 @@ export function TimelineList({ blocks, onSelect }: TimelineListProps) {
                 <p className="truncate text-base font-medium">{prettyAppName(block.AppName)}</p>
                 <p className="text-sm text-on-surface-variant">
                   {formatClockTime(start)} – {formatClockTime(end)}
-                  {unsorted && ' · not assigned yet'}
+                  {unsorted && ` · ${t('timeline.notAssigned')}`}
                 </p>
               </div>
               <span className="shrink-0 font-mono text-lg font-semibold">{formatHoursMinutes(minutes)}</span>

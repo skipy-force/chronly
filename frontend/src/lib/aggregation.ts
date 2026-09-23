@@ -41,6 +41,7 @@ export function buildMonthGrid(
   minutesByDay: Map<string, number>,
   actualTodayKey: string,
   selectedKey: string,
+  locale = 'en-US',
 ): { monthLabel: string; weeks: HeatmapDay[][] } {
   const weeks: HeatmapDay[][] = []
   let cursor = bounds.gridStart
@@ -61,7 +62,7 @@ export function buildMonthGrid(
   }
 
   return {
-    monthLabel: bounds.monthStart.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+    monthLabel: bounds.monthStart.toLocaleDateString(locale, { month: 'long', year: 'numeric' }),
     weeks,
   }
 }

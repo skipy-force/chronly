@@ -13,7 +13,8 @@ import { AppDetailView } from '../components/AppDetailView'
 import { DatePicker } from '../components/DatePicker'
 import { prettyAppName } from '../lib/appNames'
 import { fadeInVariants, staggerContainer } from '../lib/motion'
-import { localDateKey, addDays, formatHoursMinutes, greeting } from '../lib/dates'
+import { useT, useWeekdayLabels } from '../lib/i18n'
+import { localDateKey, addDays, formatHoursMinutes, greetingKey, localeForLang } from '../lib/dates'
 import {
   blockMinutes,
   minutesByDayFromBlocks,
@@ -23,8 +24,6 @@ import {
   weeklyAverageMinutes,
 } from '../lib/aggregation'
 
-const WEEKDAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-
 function endOfDay(d: Date): Date {
   const end = new Date(d)
   end.setHours(23, 59, 59, 999)
@@ -33,7 +32,9 @@ function endOfDay(d: Date): Date {
 
 export function TodayScreen() {
   const queryClient = useQueryClient()
-  const { displayName } = useUiStore()
+  const { displayName, language } = useUiStore()
+  const t = useT()
+  const weekdayLabels = useWeekdayLabels()
   const actualNow = useMemo(() => new Date(), [])
   const actualTodayKey = localDateKey(actualNow)
 
@@ -93,8 +94,8 @@ export function TodayScreen() {
   )
 
   const { monthLabel, weeks: heatmapWeeks } = useMemo(
-    () => buildMonthGrid(bounds, minutesByDay, actualTodayKey, selectedKey),
-    [bounds, minutesByDay, actualTodayKey, selectedKey],
+    () => buildMonthGrid(bounds, minutesByDay, actualTodayKey, selectedKey, localeForLang(language)),
+    [bounds, minutesByDay, actualTodayKey, selectedKey, language],
   )
 
   const appBreakdown = useMemo(() => {
@@ -132,7 +133,7 @@ export function TodayScreen() {
         <div>
           {isViewingToday && displayName && (
             <p className="text-xs text-on-surface-variant">
-              {greeting(actualNow)}, {displayName}
+              {t(greetingKey(actualNow))}, {displayName}
             </p>
           )}
           <div className="flex items-center gap-1">
@@ -142,7 +143,7 @@ export function TodayScreen() {
             >
               <ChevronLeft size={16} />
             </button>
-            <h1 className="text-lg font-semibold">{isViewingToday ? 'Today' : selectedKey}</h1>
+            <h1 className="text-lg font-semibold">{isViewingToday ? t('nav.today') : selectedKey}</h1>
             <button
               onClick={() => setSelectedKey((k) => localDateKey(addDays(new Date(k + 'T00:00:00'), 1)))}
               disabled={isViewingToday}
@@ -155,7 +156,7 @@ export function TodayScreen() {
           {isViewingToday ? (
             <LiveStatus tracking={tracking} appName={lastBlock?.AppName} startIso={lastBlock?.StartTime} />
           ) : (
-            <p className="text-xs text-on-surface-variant">Viewing history</p>
+            <p className="text-xs text-on-surface-variant">{t('today.viewingHistory')}</p>
           )}
         </div>
         {isViewingToday && <PauseResumeButton tracking={tracking} onToggle={() => pauseMutation.mutate(tracking)} />}
@@ -171,21 +172,21 @@ export function TodayScreen() {
           variants={staggerContainer(0.06)}
         >
           <motion.div variants={sectionVariants} className="grid grid-cols-3 gap-4">
-            <StatCard label="Weekly average" value={formatHoursMinutes(weeklyAverage)} />
+            <StatCard label={t('today.weeklyAverage')} value={formatHoursMinutes(weeklyAverage)} />
             <StatCard
-              label={isViewingToday ? 'Today' : 'Selected day'}
+              label={isViewingToday ? t('nav.today') : t('today.selectedDay')}
               value={formatHoursMinutes(selectedTotalMinutes)}
             />
-            <StatCard label="Idle" value={formatHoursMinutes(idleSelectedMinutes)} />
+            <StatCard label={t('today.idle')} value={formatHoursMinutes(idleSelectedMinutes)} />
           </motion.div>
 
           <motion.div variants={sectionVariants} className="grid grid-cols-2 gap-4">
-            <WeekBarChart minutesByDay={weekMinutes} labels={WEEKDAY_LABELS} activeIndex={selectedIndexInWeek} />
+            <WeekBarChart minutesByDay={weekMinutes} labels={weekdayLabels} activeIndex={selectedIndexInWeek} />
             <MonthHeatmap monthLabel={monthLabel} weeks={heatmapWeeks} onSelectDay={setSelectedKey} />
           </motion.div>
 
           <motion.div variants={sectionVariants}>
-            <h2 className="mb-2 text-sm font-semibold text-on-surface-variant">Apps</h2>
+            <h2 className="mb-2 text-sm font-semibold text-on-surface-variant">{t('today.apps')}</h2>
             <AppBreakdownList entries={appBreakdown} onSelectApp={setViewingApp} />
           </motion.div>
         </motion.div>
@@ -204,6 +205,7 @@ function StatCard({ label, value }: { label: string; value: string }) {
 }
 
 function PauseResumeButton({ tracking, onToggle }: { tracking: boolean; onToggle: () => void }) {
+  const t = useT()
   return (
     <button
       onClick={onToggle}
@@ -223,7 +225,7 @@ function PauseResumeButton({ tracking, onToggle }: { tracking: boolean; onToggle
           className="flex items-center gap-2"
         >
           {tracking ? <Pause size={16} /> : <Play size={16} />}
-          {tracking ? 'Pause' : 'Resume'}
+          {tracking ? t('today.pause') : t('today.resume')}
         </motion.span>
       </AnimatePresence>
     </button>
@@ -239,10 +241,11 @@ const LiveStatus = memo(function LiveStatus({
   appName?: string
   startIso?: string
 }) {
+  const t = useT()
   const elapsed = useElapsedSince(tracking && startIso ? startIso : null)
   return (
     <p className="text-xs text-on-surface-variant">
-      {tracking ? (appName ? prettyAppName(appName) : 'No activity yet') : 'Paused'}
+      {tracking ? (appName ? prettyAppName(appName) : t('today.noActivityYet')) : t('today.paused')}
       {tracking && elapsed ? ` · ${elapsed}` : ''}
     </p>
   )

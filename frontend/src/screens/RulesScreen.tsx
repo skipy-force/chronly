@@ -6,6 +6,7 @@ import { queryKeys } from '../lib/queryClient'
 import { RulesGraph } from '../components/RulesGraph'
 import { Select } from '../components/Select'
 import { fadeInVariants, staggerContainer } from '../lib/motion'
+import { useT } from '../lib/i18n'
 import type { tracker } from '../../wailsjs/go/models'
 
 const sectionVariants = fadeInVariants(0.35, 10)
@@ -19,6 +20,7 @@ function EditRulePanel({
   projects: tracker.Project[]
   onClose: () => void
 }) {
+  const t = useT()
   const [pattern, setPattern] = useState(rule.Pattern)
   const [projectId, setProjectId] = useState<number>(rule.ProjectID)
   const [priority, setPriority] = useState(rule.Priority)
@@ -35,10 +37,10 @@ function EditRulePanel({
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black/50" onClick={onClose}>
       <div className="w-80 rounded-lg bg-surface-container-high p-4" onClick={(e) => e.stopPropagation()}>
-        <p className="mb-3 text-sm font-semibold">Edit rule</p>
+        <p className="mb-3 text-sm font-semibold">{t('editRule.title')}</p>
         <div className="flex flex-col gap-2">
           <div>
-            <label className="text-xs text-on-surface-variant">Pattern</label>
+            <label className="text-xs text-on-surface-variant">{t('rules.pattern')}</label>
             <input
               autoFocus
               value={pattern}
@@ -47,16 +49,17 @@ function EditRulePanel({
             />
           </div>
           <div>
-            <label className="text-xs text-on-surface-variant">Project</label>
+            <label className="text-xs text-on-surface-variant">{t('rules.project')}</label>
             <Select
               value={String(projectId)}
               onChange={(v) => setProjectId(Number(v))}
               options={projects.map((p) => ({ value: String(p.ID), label: p.Name }))}
+              placeholder={t('select.placeholder')}
               className="w-full"
             />
           </div>
           <div>
-            <label className="text-xs text-on-surface-variant">Priority</label>
+            <label className="text-xs text-on-surface-variant">{t('rules.priority')}</label>
             <input
               type="number"
               value={priority}
@@ -78,10 +81,10 @@ function EditRulePanel({
             }}
             className="flex-1 rounded-pill bg-primary px-3 py-1.5 text-sm text-surface"
           >
-            Save
+            {t('common.save')}
           </button>
           <button onClick={onClose} className="rounded-pill bg-surface-container px-3 py-1.5 text-sm">
-            Cancel
+            {t('common.cancel')}
           </button>
         </div>
       </div>
@@ -90,6 +93,7 @@ function EditRulePanel({
 }
 
 export function RulesScreen() {
+  const t = useT()
   const queryClient = useQueryClient()
   const { data: rules = [] } = useQuery({
     queryKey: queryKeys.assignmentRules,
@@ -137,7 +141,7 @@ export function RulesScreen() {
 
       <motion.div variants={sectionVariants} className="flex items-end gap-2 rounded-lg bg-surface-container p-3">
         <div className="flex-1">
-          <label className="text-xs text-on-surface-variant">Pattern (app name substring)</label>
+          <label className="text-xs text-on-surface-variant">{t('rules.pattern')}</label>
           <input
             value={pattern}
             onChange={(e) => setPattern(e.target.value)}
@@ -145,15 +149,16 @@ export function RulesScreen() {
           />
         </div>
         <div>
-          <label className="text-xs text-on-surface-variant">Project</label>
+          <label className="text-xs text-on-surface-variant">{t('rules.project')}</label>
           <Select
             value={projectId !== null ? String(projectId) : null}
             onChange={(v) => setProjectId(Number(v))}
             options={projects.map((p) => ({ value: String(p.ID), label: p.Name }))}
+            placeholder={t('select.placeholder')}
           />
         </div>
         <div>
-          <label className="text-xs text-on-surface-variant">Priority</label>
+          <label className="text-xs text-on-surface-variant">{t('rules.priority')}</label>
           <input
             type="number"
             value={priority}
@@ -174,7 +179,7 @@ export function RulesScreen() {
           }
           className="rounded-pill bg-primary px-4 py-1.5 text-sm text-surface disabled:opacity-40"
         >
-          Add rule
+          {t('rules.addRule')}
         </button>
       </motion.div>
 

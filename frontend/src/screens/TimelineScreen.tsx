@@ -10,6 +10,7 @@ import { DatePicker } from '../components/DatePicker'
 import { localDateKey, formatHoursMinutes } from '../lib/dates'
 import { useUiStore, type TimelineView } from '../store/uiStore'
 import { fadeInVariants, staggerContainer } from '../lib/motion'
+import { useT } from '../lib/i18n'
 
 const sectionVariants = fadeInVariants()
 
@@ -20,6 +21,7 @@ function addDays(dateStr: string, delta: number): string {
 }
 
 export function TimelineScreen() {
+  const t = useT()
   const [date, setDate] = useState(() => localDateKey(new Date()))
   const { timelineView: view, setTimelineView: setView } = useUiStore()
   const queryClient = useQueryClient()
@@ -76,15 +78,13 @@ export function TimelineScreen() {
           </button>
         </div>
         <p className="text-sm text-on-surface-variant">
-          Total: <span className="font-semibold text-on-surface">{formatHoursMinutes(totalMinutes)}</span>
+          {t('timeline.total')} <span className="font-semibold text-on-surface">{formatHoursMinutes(totalMinutes)}</span>
         </p>
       </motion.div>
 
       <motion.div variants={sectionVariants} className="flex items-center justify-between">
         <p className="text-xs text-on-surface-variant">
-          {view === 'time'
-            ? "Every card below is one tracked activity. Tap a card to assign it to a project — a red card isn't assigned yet."
-            : 'Apps you used today, most recently active first.'}
+          {view === 'time' ? t('timeline.descByTime') : t('timeline.descByApp')}
         </p>
         <div className="flex shrink-0 gap-1 rounded-pill bg-surface-container p-1">
           {(['time', 'app'] as TimelineView[]).map((v) => (
@@ -102,7 +102,7 @@ export function TimelineScreen() {
                   transition={{ type: 'spring', bounce: 0.25, duration: 0.4 }}
                 />
               )}
-              <span className="relative">{v === 'time' ? 'By time' : 'By app'}</span>
+              <span className="relative">{v === 'time' ? t('timeline.byTime') : t('timeline.byApp')}</span>
             </button>
           ))}
         </div>
@@ -129,7 +129,7 @@ export function TimelineScreen() {
       {assigningIndex !== null && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/50">
           <div className="w-80 rounded-lg bg-surface-container-high p-4">
-            <p className="mb-2 text-sm text-on-surface-variant">Assign to project</p>
+            <p className="mb-2 text-sm text-on-surface-variant">{t('timeline.assignToProject')}</p>
             {projects.map((p) => (
               <TaskPicker
                 key={p.ID}
@@ -145,7 +145,7 @@ export function TimelineScreen() {
               onClick={() => setAssigningIndex(null)}
               className="mt-2 w-full rounded-pill bg-surface-container px-3 py-1.5 text-sm"
             >
-              Cancel
+              {t('common.cancel')}
             </button>
           </div>
         </div>

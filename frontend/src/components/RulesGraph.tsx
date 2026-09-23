@@ -9,6 +9,7 @@ import {
   type SimulationLinkDatum,
 } from 'd3-force'
 import { Maximize2 } from 'lucide-react'
+import { useT } from '../lib/i18n'
 import type { tracker } from '../../wailsjs/go/models'
 
 interface GraphNode extends SimulationNodeDatum {
@@ -44,6 +45,7 @@ function curvedPath(x1: number, y1: number, x2: number, y2: number): string {
 }
 
 export function RulesGraph({ rules, projects, onDeleteRule, onEditRule }: RulesGraphProps) {
+  const t = useT()
   const [nodes, setNodes] = useState<GraphNode[]>([])
   const [links, setLinks] = useState<GraphLink[]>([])
   const [pan, setPan] = useState({ x: 0, y: 0 })
@@ -225,7 +227,7 @@ export function RulesGraph({ rules, projects, onDeleteRule, onEditRule }: RulesG
                     onPointerDown={(e) => e.stopPropagation()}
                     onClick={() => onEditRule(node.ruleId as number)}
                   >
-                    edit
+                    {t('rulesGraph.edit')}
                   </text>
                   <text
                     textAnchor="middle"
@@ -235,7 +237,7 @@ export function RulesGraph({ rules, projects, onDeleteRule, onEditRule }: RulesG
                     onPointerDown={(e) => e.stopPropagation()}
                     onClick={() => onDeleteRule(node.ruleId as number)}
                   >
-                    delete
+                    {t('rulesGraph.delete')}
                   </text>
                 </>
               )}
@@ -246,11 +248,11 @@ export function RulesGraph({ rules, projects, onDeleteRule, onEditRule }: RulesG
 
       <button
         onClick={centerView}
-        title="Reset view"
+        title={t('rulesGraph.resetView')}
         className="absolute bottom-3 right-3 flex items-center gap-1.5 rounded-pill bg-surface-container-high px-3 py-1.5 text-xs text-on-surface-variant hover:bg-outline/20"
       >
         <Maximize2 size={12} />
-        Reset view
+        {t('rulesGraph.resetView')}
       </button>
     </div>
   )

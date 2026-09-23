@@ -1,19 +1,21 @@
 import { useEffect, useRef, useState } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
-import { addDays, localDateKey, startOfMonth, startOfWeek } from '../lib/dates'
+import { addDays, localDateKey, startOfMonth, startOfWeek, localeForLang } from '../lib/dates'
+import { useWeekdayLabels } from '../lib/i18n'
+import { useUiStore } from '../store/uiStore'
 
 interface DatePickerProps {
   dateKey: string
   onChange: (dateKey: string) => void
 }
 
-const WEEKDAY_LABELS = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su']
-
 function parseDateKey(dateKey: string): Date {
   return new Date(dateKey + 'T00:00:00')
 }
 
 export function DatePicker({ dateKey, onChange }: DatePickerProps) {
+  const weekdayLabels = useWeekdayLabels(true)
+  const locale = localeForLang(useUiStore((s) => s.language))
   const [open, setOpen] = useState(false)
   const [viewMonth, setViewMonth] = useState(() => startOfMonth(parseDateKey(dateKey)))
   const rootRef = useRef<HTMLDivElement>(null)
@@ -42,7 +44,7 @@ export function DatePicker({ dateKey, onChange }: DatePickerProps) {
         onClick={() => setOpen((o) => !o)}
         className="rounded-pill bg-surface-container px-3 py-1.5 text-sm hover:bg-surface-container-high"
       >
-        {parseDateKey(dateKey).toLocaleDateString('en-US', {
+        {parseDateKey(dateKey).toLocaleDateString(locale, {
           weekday: 'short',
           day: 'numeric',
           month: 'short',
@@ -60,7 +62,7 @@ export function DatePicker({ dateKey, onChange }: DatePickerProps) {
               <ChevronLeft size={14} />
             </button>
             <span className="text-xs font-medium">
-              {viewMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+              {viewMonth.toLocaleDateString(locale, { month: 'long', year: 'numeric' })}
             </span>
             <button
               onClick={() => setViewMonth((m) => startOfMonth(addDays(m, 32)))}
@@ -70,8 +72,8 @@ export function DatePicker({ dateKey, onChange }: DatePickerProps) {
             </button>
           </div>
           <div className="grid grid-cols-7 gap-1 text-center text-[10px] text-on-surface-variant">
-            {WEEKDAY_LABELS.map((l) => (
-              <span key={l}>{l}</span>
+            {weekdayLabels.map((l, i) => (
+              <span key={i}>{l}</span>
             ))}
           </div>
           <div className="mt-1 grid grid-cols-7 gap-1">

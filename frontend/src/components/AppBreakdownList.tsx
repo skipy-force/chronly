@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import { formatHoursMinutes } from '../lib/dates'
 import { AppIconBadge } from '../lib/appIcons'
 import { prettyAppName } from '../lib/appNames'
+import { useT } from '../lib/i18n'
 
 interface AppBreakdownEntry {
   appName: string
@@ -15,12 +16,13 @@ interface AppBreakdownListProps {
 }
 
 export const AppBreakdownList = memo(function AppBreakdownList({ entries, onSelectApp }: AppBreakdownListProps) {
+  const t = useT()
   const max = Math.max(1, ...entries.map((e) => e.minutes))
 
   if (entries.length === 0) {
     return (
       <div className="flex h-full items-center justify-center rounded-lg bg-surface-container p-6 text-sm text-on-surface-variant">
-        No activity tracked yet today
+        {t('appBreakdown.empty')}
       </div>
     )
   }

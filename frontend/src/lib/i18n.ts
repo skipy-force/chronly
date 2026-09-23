@@ -50,7 +50,81 @@ const dict: Record<Lang, Record<string, string>> = {
 
     'common.save': 'Save',
     'common.cancel': 'Cancel',
+    'common.create': 'Create',
     'common.loading': 'Loading...',
+
+    'weekday.mon': 'Mon',
+    'weekday.tue': 'Tue',
+    'weekday.wed': 'Wed',
+    'weekday.thu': 'Thu',
+    'weekday.fri': 'Fri',
+    'weekday.sat': 'Sat',
+    'weekday.sun': 'Sun',
+    'weekday.short.mon': 'Mo',
+    'weekday.short.tue': 'Tu',
+    'weekday.short.wed': 'We',
+    'weekday.short.thu': 'Th',
+    'weekday.short.fri': 'Fr',
+    'weekday.short.sat': 'Sa',
+    'weekday.short.sun': 'Su',
+
+    'greeting.morning': 'Good morning',
+    'greeting.afternoon': 'Good afternoon',
+    'greeting.evening': 'Good evening',
+    'greeting.night': 'Good night',
+
+    'time.justNow': 'just now',
+    'time.minutesAgo': '{n}m ago',
+    'time.hoursAgo': '{n}h ago',
+    'time.daysAgo': '{n}d ago',
+
+    'today.viewingHistory': 'Viewing history',
+    'today.weeklyAverage': 'Weekly average',
+    'today.selectedDay': 'Selected day',
+    'today.idle': 'Idle',
+    'today.apps': 'Apps',
+    'today.noActivityYet': 'No activity yet',
+    'today.paused': 'Paused',
+    'today.pause': 'Pause',
+    'today.resume': 'Resume',
+
+    'appDetail.vsYesterday': 'vs yesterday',
+    'appDetail.dailyUsage': 'Daily usage',
+
+    'appBreakdown.empty': 'No activity tracked yet today',
+
+    'timeline.total': 'Total:',
+    'timeline.byTime': 'By time',
+    'timeline.byApp': 'By app',
+    'timeline.descByTime':
+      "Every card below is one tracked activity. Tap a card to assign it to a project — a red card isn't assigned yet.",
+    'timeline.descByApp': 'Apps you used today, most recently active first.',
+    'timeline.empty': 'No activity tracked on this day',
+    'timeline.notAssigned': 'not assigned yet',
+    'timeline.assignToProject': 'Assign to project',
+    'timeline.lastActive': 'last active',
+
+    'projects.title': 'Projects',
+    'projects.new': 'New',
+    'projects.tasks': 'Tasks',
+    'projects.newProjectName': 'Project name',
+    'projects.newTaskName': 'Task name',
+    'projects.estimateOptional': 'Estimate, minutes (optional)',
+    'editProject.title': 'Edit project',
+    'editProject.color': 'Color',
+    'editProject.archive': 'Archive',
+    'editProject.unarchive': 'Unarchive',
+
+    'rules.pattern': 'Pattern (app name substring)',
+    'rules.project': 'Project',
+    'rules.priority': 'Priority',
+    'rules.addRule': 'Add rule',
+    'editRule.title': 'Edit rule',
+    'rulesGraph.edit': 'edit',
+    'rulesGraph.delete': 'delete',
+    'rulesGraph.resetView': 'Reset view',
+
+    'select.placeholder': 'Select',
   },
   ru: {
     'nav.today': 'Сегодня',
@@ -100,15 +174,102 @@ const dict: Record<Lang, Record<string, string>> = {
 
     'common.save': 'Сохранить',
     'common.cancel': 'Отмена',
+    'common.create': 'Создать',
     'common.loading': 'Загрузка...',
+
+    'weekday.mon': 'Пн',
+    'weekday.tue': 'Вт',
+    'weekday.wed': 'Ср',
+    'weekday.thu': 'Чт',
+    'weekday.fri': 'Пт',
+    'weekday.sat': 'Сб',
+    'weekday.sun': 'Вс',
+    'weekday.short.mon': 'Пн',
+    'weekday.short.tue': 'Вт',
+    'weekday.short.wed': 'Ср',
+    'weekday.short.thu': 'Чт',
+    'weekday.short.fri': 'Пт',
+    'weekday.short.sat': 'Сб',
+    'weekday.short.sun': 'Вс',
+
+    'greeting.morning': 'Доброе утро',
+    'greeting.afternoon': 'Добрый день',
+    'greeting.evening': 'Добрый вечер',
+    'greeting.night': 'Доброй ночи',
+
+    'time.justNow': 'только что',
+    'time.minutesAgo': '{n}м назад',
+    'time.hoursAgo': '{n}ч назад',
+    'time.daysAgo': '{n}д назад',
+
+    'today.viewingHistory': 'Просмотр истории',
+    'today.weeklyAverage': 'Среднее за неделю',
+    'today.selectedDay': 'Выбранный день',
+    'today.idle': 'Простой',
+    'today.apps': 'Приложения',
+    'today.noActivityYet': 'Пока нет активности',
+    'today.paused': 'На паузе',
+    'today.pause': 'Пауза',
+    'today.resume': 'Продолжить',
+
+    'appDetail.vsYesterday': 'по сравнению со вчера',
+    'appDetail.dailyUsage': 'Использование по часам',
+
+    'appBreakdown.empty': 'Активность за сегодня пока не отслежена',
+
+    'timeline.total': 'Всего:',
+    'timeline.byTime': 'По времени',
+    'timeline.byApp': 'По приложениям',
+    'timeline.descByTime':
+      'Каждая карточка ниже — один отслеженный отрезок активности. Нажми, чтобы назначить проект — красная карточка ещё не назначена.',
+    'timeline.descByApp': 'Приложения, которыми ты пользовался сегодня, сначала самые недавние.',
+    'timeline.empty': 'За этот день активность не отслежена',
+    'timeline.notAssigned': 'ещё не назначено',
+    'timeline.assignToProject': 'Назначить проект',
+    'timeline.lastActive': 'последняя активность',
+
+    'projects.title': 'Проекты',
+    'projects.new': 'Новый',
+    'projects.tasks': 'Задачи',
+    'projects.newProjectName': 'Название проекта',
+    'projects.newTaskName': 'Название задачи',
+    'projects.estimateOptional': 'Оценка, минут (необязательно)',
+    'editProject.title': 'Редактировать проект',
+    'editProject.color': 'Цвет',
+    'editProject.archive': 'Архивировать',
+    'editProject.unarchive': 'Разархивировать',
+
+    'rules.pattern': 'Паттерн (подстрока имени приложения)',
+    'rules.project': 'Проект',
+    'rules.priority': 'Приоритет',
+    'rules.addRule': 'Добавить правило',
+    'editRule.title': 'Редактировать правило',
+    'rulesGraph.edit': 'изменить',
+    'rulesGraph.delete': 'удалить',
+    'rulesGraph.resetView': 'Сбросить вид',
+
+    'select.placeholder': 'Выбрать',
   },
 }
 
-export function translate(lang: Lang, key: string): string {
-  return dict[lang][key] ?? dict.en[key] ?? key
+export function translate(lang: Lang, key: string, params?: Record<string, string | number>): string {
+  let str = dict[lang][key] ?? dict.en[key] ?? key
+  if (params) {
+    for (const [k, v] of Object.entries(params)) {
+      str = str.replace(`{${k}}`, String(v))
+    }
+  }
+  return str
 }
 
 export function useT() {
   const language = useUiStore((s) => s.language)
-  return (key: string) => translate(language, key)
+  return (key: string, params?: Record<string, string | number>) => translate(language, key, params)
+}
+
+const WEEKDAY_KEYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
+
+export function useWeekdayLabels(short = false): string[] {
+  const t = useT()
+  return WEEKDAY_KEYS.map((k) => t(short ? `weekday.short.${k}` : `weekday.${k}`))
 }

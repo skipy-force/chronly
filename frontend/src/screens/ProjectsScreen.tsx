@@ -5,6 +5,7 @@ import { Archive, ArchiveRestore, Pencil, Plus } from 'lucide-react'
 import { api } from '../lib/api'
 import { queryKeys } from '../lib/queryClient'
 import { fadeInVariants, staggerContainer } from '../lib/motion'
+import { useT } from '../lib/i18n'
 import type { tracker } from '../../wailsjs/go/models'
 
 const sectionVariants = fadeInVariants(0.35, 10)
@@ -66,7 +67,31 @@ function ProjectCard({ project, onEdit }: { project: tracker.Project; onEdit: ()
   )
 }
 
+function TaskRow({ task, projectId }: { task: tracker.Task; projectId: number }) {
+  const t = useT()
+  const queryClient = useQueryClient()
+
+  const archiveMutation = useMutation({
+    mutationFn: () => api.setTaskStatus(task.ID, 'archived'),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.tasksByProject(projectId) }),
+  })
+
+  return (
+    <div className="group flex items-center justify-between gap-2 rounded-lg bg-surface-container p-3 text-sm">
+      <span className="truncate">{task.Name}</span>
+      <button
+        onClick={() => archiveMutation.mutate()}
+        title={t('editProject.archive')}
+        className="shrink-0 rounded-pill p-1 text-on-surface-variant opacity-0 hover:bg-surface-container-high group-hover:opacity-100"
+      >
+        <Archive size={14} />
+      </button>
+    </div>
+  )
+}
+
 function EditProjectPanel({ project, onClose }: { project: tracker.Project; onClose: () => void }) {
+  const t = useT()
   const [name, setName] = useState(project.Name)
   const [color, setColor] = useState(project.Color || '#c4b5fd')
   const [estimate, setEstimate] = useState(project.EstimateMinutes ? String(project.EstimateMinutes) : '')
@@ -92,7 +117,7 @@ function EditProjectPanel({ project, onClose }: { project: tracker.Project; onCl
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black/50" onClick={onClose}>
       <div className="w-80 rounded-lg bg-surface-container-high p-4" onClick={(e) => e.stopPropagation()}>
-        <p className="mb-3 text-sm font-semibold">Edit project</p>
+        <p className="mb-3 text-sm font-semibold">{t('editProject.title')}</p>
         <div className="flex flex-col gap-2">
           <input
             autoFocus
@@ -101,7 +126,7 @@ function EditProjectPanel({ project, onClose }: { project: tracker.Project; onCl
             className="rounded-md bg-surface-container px-3 py-1.5 text-sm outline-none focus:ring-1 focus:ring-primary"
           />
           <div className="flex items-center gap-2">
-            <label className="text-xs text-on-surface-variant">Color</label>
+            <label className="text-xs text-on-surface-variant">{t('editProject.color')}</label>
             <input
               type="color"
               value={color}
@@ -114,7 +139,7 @@ function EditProjectPanel({ project, onClose }: { project: tracker.Project; onCl
             min={1}
             value={estimate}
             onChange={(e) => setEstimate(e.target.value)}
-            placeholder="Estimate, minutes (optional)"
+            placeholder={t('projects.estimateOptional')}
             className="rounded-md bg-surface-container px-3 py-1.5 text-sm outline-none [appearance:textfield] focus:ring-1 focus:ring-primary [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
           />
         </div>
@@ -132,10 +157,10 @@ function EditProjectPanel({ project, onClose }: { project: tracker.Project; onCl
             }}
             className="flex-1 rounded-pill bg-primary px-3 py-1.5 text-sm text-surface"
           >
-            Save
+            {t('common.save')}
           </button>
           <button onClick={onClose} className="rounded-pill bg-surface-container px-3 py-1.5 text-sm">
-            Cancel
+            {t('common.cancel')}
           </button>
         </div>
         <button
@@ -143,7 +168,7 @@ function EditProjectPanel({ project, onClose }: { project: tracker.Project; onCl
           className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-pill bg-error/15 px-3 py-1.5 text-sm text-error"
         >
           {project.Archived ? <ArchiveRestore size={14} /> : <Archive size={14} />}
-          {project.Archived ? 'Unarchive' : 'Archive'}
+          {project.Archived ? t('editProject.unarchive') : t('editProject.archive')}
         </button>
       </div>
     </div>
@@ -151,6 +176,7 @@ function EditProjectPanel({ project, onClose }: { project: tracker.Project; onCl
 }
 
 function NewProjectForm({ onDone }: { onDone: () => void }) {
+  const t = useT()
   const [name, setName] = useState('')
   const [estimate, setEstimate] = useState('')
   const queryClient = useQueryClient()
@@ -183,7 +209,7 @@ function NewProjectForm({ onDone }: { onDone: () => void }) {
         autoFocus
         value={name}
         onChange={(e) => setName(e.target.value)}
-        placeholder="Project name"
+        placeholder={t('projects.newProjectName')}
         className="rounded-md bg-surface-container-high px-3 py-1.5 text-sm outline-none focus:ring-1 focus:ring-primary"
       />
       <input
@@ -191,19 +217,19 @@ function NewProjectForm({ onDone }: { onDone: () => void }) {
         min={1}
         value={estimate}
         onChange={(e) => setEstimate(e.target.value)}
-        placeholder="Estimate, minutes (optional)"
+        placeholder={t('projects.estimateOptional')}
         className="rounded-md bg-surface-container-high px-3 py-1.5 text-sm outline-none [appearance:textfield] focus:ring-1 focus:ring-primary [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
       />
       <div className="flex gap-2">
         <button type="submit" className="flex-1 rounded-pill bg-primary px-3 py-1.5 text-sm text-surface">
-          Create
+          {t('common.create')}
         </button>
         <button
           type="button"
           onClick={onDone}
           className="rounded-pill bg-surface-container-high px-3 py-1.5 text-sm"
         >
-          Cancel
+          {t('common.cancel')}
         </button>
       </div>
     </form>
@@ -211,6 +237,7 @@ function NewProjectForm({ onDone }: { onDone: () => void }) {
 }
 
 function NewTaskForm({ projectId, onDone }: { projectId: number; onDone: () => void }) {
+  const t = useT()
   const [name, setName] = useState('')
   const [estimate, setEstimate] = useState('')
   const queryClient = useQueryClient()
@@ -243,7 +270,7 @@ function NewTaskForm({ projectId, onDone }: { projectId: number; onDone: () => v
         autoFocus
         value={name}
         onChange={(e) => setName(e.target.value)}
-        placeholder="Task name"
+        placeholder={t('projects.newTaskName')}
         className="rounded-md bg-surface-container-high px-3 py-1.5 text-sm outline-none focus:ring-1 focus:ring-primary"
       />
       <input
@@ -251,19 +278,19 @@ function NewTaskForm({ projectId, onDone }: { projectId: number; onDone: () => v
         min={1}
         value={estimate}
         onChange={(e) => setEstimate(e.target.value)}
-        placeholder="Estimate, minutes (optional)"
+        placeholder={t('projects.estimateOptional')}
         className="rounded-md bg-surface-container-high px-3 py-1.5 text-sm outline-none [appearance:textfield] focus:ring-1 focus:ring-primary [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
       />
       <div className="flex gap-2">
         <button type="submit" className="flex-1 rounded-pill bg-primary px-3 py-1.5 text-sm text-surface">
-          Create
+          {t('common.create')}
         </button>
         <button
           type="button"
           onClick={onDone}
           className="rounded-pill bg-surface-container-high px-3 py-1.5 text-sm"
         >
-          Cancel
+          {t('common.cancel')}
         </button>
       </div>
     </form>
@@ -271,6 +298,7 @@ function NewTaskForm({ projectId, onDone }: { projectId: number; onDone: () => v
 }
 
 export function ProjectsScreen() {
+  const t = useT()
   const { data: projects = [] } = useQuery({
     queryKey: queryKeys.projects,
     queryFn: api.listProjects,
@@ -290,13 +318,13 @@ export function ProjectsScreen() {
     <motion.div className="flex h-full gap-4 p-6" initial="hidden" animate="show" variants={staggerContainer()}>
       <motion.div variants={sectionVariants} className="flex w-80 flex-col gap-2 overflow-auto">
         <div className="flex items-center justify-between">
-          <p className="text-sm font-semibold uppercase text-on-surface-variant">Projects</p>
+          <p className="text-sm font-semibold uppercase text-on-surface-variant">{t('projects.title')}</p>
           <button
             onClick={() => setAddingProject((v) => !v)}
             className="flex items-center gap-1 rounded-pill bg-surface-container px-2.5 py-1 text-xs hover:bg-surface-container-high"
           >
             <Plus size={14} />
-            New
+            {t('projects.new')}
           </button>
         </div>
         {addingProject && <NewProjectForm onDone={() => setAddingProject(false)} />}
@@ -309,21 +337,19 @@ export function ProjectsScreen() {
       {selected !== null && (
         <motion.div variants={sectionVariants} className="flex-1 overflow-auto">
           <div className="mb-2 flex items-center justify-between">
-            <p className="text-sm text-on-surface-variant">Tasks</p>
+            <p className="text-sm text-on-surface-variant">{t('projects.tasks')}</p>
             <button
               onClick={() => setAddingTask((v) => !v)}
               className="flex items-center gap-1 rounded-pill bg-surface-container px-2.5 py-1 text-xs hover:bg-surface-container-high"
             >
               <Plus size={14} />
-              New
+              {t('projects.new')}
             </button>
           </div>
           <div className="flex flex-col gap-2">
             {addingTask && <NewTaskForm projectId={selected} onDone={() => setAddingTask(false)} />}
-            {tasks.map((t) => (
-              <div key={t.ID} className="rounded-lg bg-surface-container p-3 text-sm">
-                {t.Name}
-              </div>
+            {tasks.map((task) => (
+              <TaskRow key={task.ID} task={task} projectId={selected} />
             ))}
           </div>
         </motion.div>
