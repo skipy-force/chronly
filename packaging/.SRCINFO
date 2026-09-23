@@ -1,0 +1,19 @@
+pkgbase = chronly
+	pkgdesc = Automatic desktop time tracker for Hyprland — watches your active window, builds a Today dashboard, timeline, and per-project estimate-vs-actual, no manual timers
+	pkgver = 0.1.2.alpha
+	pkgrel = 1
+	url = https://github.com/skipy-force/chronly
+	arch = x86_64
+	license = LicenseRef-All-Rights-Reserved
+	makedepends = go
+	makedepends = nodejs
+	makedepends = npm
+	depends = webkit2gtk-4.1
+	depends = gtk3
+	optdepends = hyprland: required at runtime, window tracking talks to its IPC socket directly
+	optdepends = matugen: live theme re-coloring from your wallpaper
+	options = !lto
+	source = chronly-0.1.2.alpha.tar.gz::https://github.com/skipy-force/chronly/archive/refs/tags/v0.1.2-alpha.tar.gz
+	sha256sums = 07fc959c8f24cfda87be349c2f114b83d3fbefbd32e418024d12e2318e8d0e5d
+
+pkgname = chronly

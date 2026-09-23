@@ -55,6 +55,21 @@ stays local — SQLite on disk, no cloud sync, no account.
 - **Developer mode.** Hidden behind a press-and-hold unlock in Settings —
   DB path, app version, and a live log viewer once unlocked.
 
+## Installing (Arch/CachyOS)
+
+Not on the AUR yet — registration there is temporarily paused. In the
+meantime, build straight from the packaging files in this repo:
+
+```bash
+git clone https://github.com/skipy-force/chronly.git
+cd chronly/packaging
+makepkg -si
+```
+
+This resolves dependencies, builds the frontend and Go binary, and installs
+`chronly` system-wide with a desktop entry and icon. Once AUR registration
+reopens, the same `PKGBUILD`/`.SRCINFO` will be pushed there directly.
+
 ## Requirements
 
 - Linux with **Hyprland** (window tracking talks to Hyprland's own IPC socket
