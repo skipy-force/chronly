@@ -1,4 +1,5 @@
 import { memo } from 'react'
+import { motion } from 'framer-motion'
 
 interface MonthHeatmapProps {
   monthLabel: string
@@ -24,13 +25,16 @@ export const MonthHeatmap = memo(function MonthHeatmap({ monthLabel, weeks, onSe
       <div className="flex flex-col gap-1.5">
         {weeks.map((week, wi) => (
           <div key={wi} className="flex gap-1.5">
-            {week.map((day) => (
-              <button
+            {week.map((day, di) => (
+              <motion.button
                 key={day.key}
                 type="button"
                 title={day.key}
                 disabled={!day.inMonth || !onSelectDay}
                 onClick={() => onSelectDay?.(day.key)}
+                initial={{ scale: 0.2, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.35, ease: 'easeOut', delay: (wi * 7 + di) * 0.008 }}
                 className={`h-5 flex-1 rounded ${day.inMonth ? intensityClass(day.minutes, max) : 'bg-transparent'} ${
                   day.isToday ? 'ring-1 ring-primary' : ''
                 } ${day.isSelected ? 'outline outline-2 outline-on-surface' : ''} ${

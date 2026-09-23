@@ -1,4 +1,5 @@
 import { memo } from 'react'
+import { motion } from 'framer-motion'
 import { formatHoursMinutes } from '../lib/dates'
 import { AppIconBadge } from '../lib/appIcons'
 import { prettyAppName } from '../lib/appNames'
@@ -25,13 +26,18 @@ export const AppBreakdownList = memo(function AppBreakdownList({ entries }: AppB
 
   return (
     <div className="flex flex-col gap-2">
-      {entries.map((entry) => (
+      {entries.map((entry, i) => (
         <div key={entry.appName} className="flex items-center gap-3 rounded-lg bg-surface-container p-3">
           <AppIconBadge appName={entry.appName} />
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-medium">{prettyAppName(entry.appName)}</p>
             <div className="mt-1 h-1.5 overflow-hidden rounded-pill bg-surface-container-high">
-              <div className="h-full rounded-pill bg-primary" style={{ width: `${(entry.minutes / max) * 100}%` }} />
+              <motion.div
+                className="h-full rounded-pill bg-primary"
+                initial={{ width: '0%' }}
+                animate={{ width: `${(entry.minutes / max) * 100}%` }}
+                transition={{ duration: 0.8, ease: 'easeOut', delay: i * 0.05 }}
+              />
             </div>
           </div>
           <span className="shrink-0 font-mono text-sm text-on-surface-variant">

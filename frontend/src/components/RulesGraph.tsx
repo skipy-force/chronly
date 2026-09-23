@@ -8,6 +8,7 @@ import {
   type SimulationNodeDatum,
   type SimulationLinkDatum,
 } from 'd3-force'
+import { Maximize2 } from 'lucide-react'
 import type { tracker } from '../../wailsjs/go/models'
 
 interface GraphNode extends SimulationNodeDatum {
@@ -25,8 +26,10 @@ interface RulesGraphProps {
   onDeleteRule: (id: number) => void
 }
 
-const WIDTH = 640
-const HEIGHT = 420
+const VIRTUAL_WIDTH = 1600
+const VIRTUAL_HEIGHT = 1000
+const MIN_ZOOM = 0.3
+const MAX_ZOOM = 2.5
 
 function curvedPath(x1: number, y1: number, x2: number, y2: number): string {
   const midX = (x1 + x2) / 2
@@ -42,8 +45,12 @@ function curvedPath(x1: number, y1: number, x2: number, y2: number): string {
 export function RulesGraph({ rules, projects, onDeleteRule }: RulesGraphProps) {
   const [nodes, setNodes] = useState<GraphNode[]>([])
   const [links, setLinks] = useState<GraphLink[]>([])
+  const [pan, setPan] = useState({ x: 0, y: 0 })
+  const [zoom, setZoom] = useState(1)
   const simulationRef = useRef<ReturnType<typeof forceSimulation<GraphNode>> | null>(null)
   const draggingId = useRef<string | null>(null)
+  const panState = useRef<{ startX: number; startY: number; originX: number; originY: number } | null>(null)
+  const svgRef = useRef<SVGSVGElement | null>(null)
 
   useEffect(() => {
     const projectIds = new Set(projects.map((p) => p.ID))
@@ -72,11 +79,11 @@ export function RulesGraph({ rules, projects, onDeleteRule }: RulesGraphProps) {
         'link',
         forceLink<GraphNode, GraphLink>(graphLinks)
           .id((d) => d.id)
-          .distance(130),
+          .distance(150),
       )
-      .force('charge', forceManyBody().strength(-260))
-      .force('center', forceCenter(WIDTH / 2, HEIGHT / 2))
-      .force('collide', forceCollide(46))
+      .force('charge', forceManyBody().strength(-320))
+      .force('center', forceCenter(VIRTUAL_WIDTH / 2, VIRTUAL_HEIGHT / 2))
+      .force('collide', forceCollide(50))
       .on('tick', () => {
         setNodes([...graphNodes])
         setLinks([...graphLinks])
@@ -88,17 +95,37 @@ export function RulesGraph({ rules, projects, onDeleteRule }: RulesGraphProps) {
     }
   }, [rules, projects])
 
-  function onPointerDown(e: React.PointerEvent, node: GraphNode) {
+  function onNodePointerDown(e: React.PointerEvent, node: GraphNode) {
+    e.stopPropagation()
     e.currentTarget.setPointerCapture(e.pointerId)
     draggingId.current = node.id
     simulationRef.current?.alphaTarget(0.3).restart()
   }
 
-  function onPointerMove(e: React.PointerEvent, svgRef: SVGSVGElement | null) {
-    if (!draggingId.current || !svgRef) return
-    const rect = svgRef.getBoundingClientRect()
-    const x = e.clientX - rect.left
-    const y = e.clientY - rect.top
+  function toVirtualPoint(clientX: number, clientY: number) {
+    const rect = svgRef.current?.getBoundingClientRect()
+    if (!rect) return { x: 0, y: 0 }
+    return {
+      x: (clientX - rect.left - pan.x) / zoom,
+      y: (clientY - rect.top - pan.y) / zoom,
+    }
+  }
+
+  function onSvgPointerDown(e: React.PointerEvent<SVGSVGElement>) {
+    if (e.target !== e.currentTarget) return
+    panState.current = { startX: e.clientX, startY: e.clientY, originX: pan.x, originY: pan.y }
+    e.currentTarget.setPointerCapture(e.pointerId)
+  }
+
+  function onSvgPointerMove(e: React.PointerEvent<SVGSVGElement>) {
+    if (panState.current) {
+      const dx = e.clientX - panState.current.startX
+      const dy = e.clientY - panState.current.startY
+      setPan({ x: panState.current.originX + dx, y: panState.current.originY + dy })
+      return
+    }
+    if (!draggingId.current) return
+    const { x, y } = toVirtualPoint(e.clientX, e.clientY)
     const node = nodes.find((n) => n.id === draggingId.current)
     if (node) {
       node.fx = x
@@ -106,72 +133,111 @@ export function RulesGraph({ rules, projects, onDeleteRule }: RulesGraphProps) {
     }
   }
 
-  function onPointerUp() {
+  function onSvgPointerUp() {
+    panState.current = null
     draggingId.current = null
     simulationRef.current?.alphaTarget(0)
   }
 
-  let svgEl: SVGSVGElement | null = null
+  function onWheel(e: React.WheelEvent<SVGSVGElement>) {
+    e.preventDefault()
+    setZoom((z) => Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, z - e.deltaY * 0.001)))
+  }
+
+  function centerView() {
+    const rect = svgRef.current?.getBoundingClientRect()
+    if (!rect) return
+    setPan({ x: rect.width / 2 - VIRTUAL_WIDTH / 2, y: rect.height / 2 - VIRTUAL_HEIGHT / 2 })
+    setZoom(1)
+  }
+
+  useEffect(() => {
+    centerView()
+  }, [])
 
   return (
-    <svg
-      ref={(el) => {
-        svgEl = el
-      }}
-      width={WIDTH}
-      height={HEIGHT}
-      className="rounded-lg bg-surface-container select-none"
-      onPointerMove={(e) => onPointerMove(e, svgEl)}
-      onPointerUp={onPointerUp}
-    >
-      {links.map((l, i) => {
-        const source = l.source as GraphNode
-        const target = l.target as GraphNode
-        if (typeof source === 'string' || typeof target === 'string') return null
-        return (
-          <path
-            key={i}
-            d={curvedPath(source.x ?? 0, source.y ?? 0, target.x ?? 0, target.y ?? 0)}
-            className="fill-none stroke-outline/50"
-            strokeWidth="1.5"
-          />
-        )
-      })}
+    <div className="relative h-full w-full">
+      <svg
+        ref={svgRef}
+        width="100%"
+        height="100%"
+        className="cursor-grab select-none touch-none active:cursor-grabbing"
+        onPointerDown={onSvgPointerDown}
+        onPointerMove={onSvgPointerMove}
+        onPointerUp={onSvgPointerUp}
+        onWheel={onWheel}
+      >
+        <defs>
+          <filter id="node-glow" x="-60%" y="-60%" width="220%" height="220%">
+            <feGaussianBlur stdDeviation="3.5" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
 
-      {nodes.map((node) => (
-        <g
-          key={node.id}
-          transform={`translate(${node.x ?? 0}, ${node.y ?? 0})`}
-          onPointerDown={(e) => onPointerDown(e, node)}
-          className="cursor-grab active:cursor-grabbing"
-        >
-          <circle
-            r={node.kind === 'project' ? 30 : 22}
-            className={node.kind === 'project' ? 'fill-primary' : 'fill-surface-container-high stroke-outline'}
-            strokeWidth={node.kind === 'rule' ? 1 : 0}
-          />
-          <text
-            textAnchor="middle"
-            dy="4"
-            className={`pointer-events-none text-[10px] font-medium ${
-              node.kind === 'project' ? 'fill-surface' : 'fill-on-surface'
-            }`}
-          >
-            {node.label.length > 12 ? node.label.slice(0, 11) + '…' : node.label}
-          </text>
-          {node.kind === 'rule' && node.ruleId !== undefined && (
-            <text
-              textAnchor="middle"
-              y={38}
-              className="cursor-pointer fill-error text-[10px]"
-              onPointerDown={(e) => e.stopPropagation()}
-              onClick={() => onDeleteRule(node.ruleId as number)}
+        <g transform={`translate(${pan.x}, ${pan.y}) scale(${zoom})`}>
+          {links.map((l, i) => {
+            const source = l.source as GraphNode
+            const target = l.target as GraphNode
+            if (typeof source === 'string' || typeof target === 'string') return null
+            return (
+              <path
+                key={i}
+                d={curvedPath(source.x ?? 0, source.y ?? 0, target.x ?? 0, target.y ?? 0)}
+                className="fill-none stroke-outline/50"
+                strokeWidth="1.5"
+              />
+            )
+          })}
+
+          {nodes.map((node) => (
+            <g
+              key={node.id}
+              transform={`translate(${node.x ?? 0}, ${node.y ?? 0})`}
+              onPointerDown={(e) => onNodePointerDown(e, node)}
+              className="cursor-grab active:cursor-grabbing"
             >
-              delete
-            </text>
-          )}
+              <circle
+                r={node.kind === 'project' ? 30 : 22}
+                filter="url(#node-glow)"
+                className={node.kind === 'project' ? 'fill-primary' : 'fill-surface-container-high stroke-outline'}
+                strokeWidth={node.kind === 'rule' ? 1 : 0}
+              />
+              <text
+                textAnchor="middle"
+                dy="4"
+                className={`pointer-events-none text-[10px] font-medium ${
+                  node.kind === 'project' ? 'fill-surface' : 'fill-on-surface'
+                }`}
+              >
+                {node.label.length > 12 ? node.label.slice(0, 11) + '…' : node.label}
+              </text>
+              {node.kind === 'rule' && node.ruleId !== undefined && (
+                <text
+                  textAnchor="middle"
+                  y={38}
+                  className="cursor-pointer fill-error text-[10px]"
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onClick={() => onDeleteRule(node.ruleId as number)}
+                >
+                  delete
+                </text>
+              )}
+            </g>
+          ))}
         </g>
-      ))}
-    </svg>
+      </svg>
+
+      <button
+        onClick={centerView}
+        title="Reset view"
+        className="absolute bottom-3 right-3 flex items-center gap-1.5 rounded-pill bg-surface-container-high px-3 py-1.5 text-xs text-on-surface-variant hover:bg-outline/20"
+      >
+        <Maximize2 size={12} />
+        Reset view
+      </button>
+    </div>
   )
 }

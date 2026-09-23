@@ -1,15 +1,8 @@
 import { ReactNode } from 'react'
 import { motion } from 'framer-motion'
-import { FolderKanban, Network, Settings as SettingsIcon, Sun, User, Waypoints } from 'lucide-react'
-import { SCREENS, useUiStore, type ScreenId } from '../../store/uiStore'
-
-const ICONS: Record<ScreenId, typeof Sun> = {
-  today: Sun,
-  timeline: Waypoints,
-  projects: FolderKanban,
-  rules: Network,
-  settings: SettingsIcon,
-}
+import { User } from 'lucide-react'
+import { SCREENS, useUiStore } from '../../store/uiStore'
+import { SCREEN_ICONS } from '../../lib/screenIcons'
 
 export function SidebarShell({ children }: { children: ReactNode }) {
   const { activeScreen, setActiveScreen } = useUiStore()
@@ -24,7 +17,7 @@ export function SidebarShell({ children }: { children: ReactNode }) {
         </div>
 
         {SCREENS.map((screen) => {
-          const Icon = ICONS[screen.id]
+          const Icon = SCREEN_ICONS[screen.id]
           return (
             <button
               key={screen.id}

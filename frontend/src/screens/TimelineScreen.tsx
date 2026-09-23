@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { motion } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { api } from '../lib/api'
@@ -9,6 +9,9 @@ import { TimelineByApp } from '../components/TimelineByApp'
 import { DatePicker } from '../components/DatePicker'
 import { localDateKey, formatHoursMinutes } from '../lib/dates'
 import { useUiStore, type TimelineView } from '../store/uiStore'
+import { fadeInVariants, staggerContainer } from '../lib/motion'
+
+const sectionVariants = fadeInVariants()
 
 function addDays(dateStr: string, delta: number): string {
   const d = new Date(dateStr + 'T00:00:00')
@@ -50,8 +53,13 @@ export function TimelineScreen() {
   )
 
   return (
-    <div className="flex h-full flex-col gap-4 p-6">
-      <div className="flex items-center justify-between">
+    <motion.div
+      className="flex h-full flex-col gap-4 p-6"
+      initial="hidden"
+      animate="show"
+      variants={staggerContainer()}
+    >
+      <motion.div variants={sectionVariants} className="flex items-center justify-between">
         <div className="flex items-center gap-1">
           <button
             onClick={() => setDate((d) => addDays(d, -1))}
@@ -70,9 +78,9 @@ export function TimelineScreen() {
         <p className="text-sm text-on-surface-variant">
           Total: <span className="font-semibold text-on-surface">{formatHoursMinutes(totalMinutes)}</span>
         </p>
-      </div>
+      </motion.div>
 
-      <div className="flex items-center justify-between">
+      <motion.div variants={sectionVariants} className="flex items-center justify-between">
         <p className="text-xs text-on-surface-variant">
           {view === 'time'
             ? "Every card below is one tracked activity. Tap a card to assign it to a project — a red card isn't assigned yet."
@@ -98,15 +106,25 @@ export function TimelineScreen() {
             </button>
           ))}
         </div>
-      </div>
+      </motion.div>
 
-      <div className="min-h-0 flex-1">
-        {view === 'time' ? (
-          <TimelineList blocks={blocks} onSelect={(index) => setAssigningIndex(index)} />
-        ) : (
-          <TimelineByApp blocks={blocks} />
-        )}
-      </div>
+      <motion.div variants={sectionVariants} className="min-h-0 flex-1">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={`${date}-${view}`}
+            className="h-full"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0, transition: { duration: 0.35, ease: 'easeOut' } }}
+            exit={{ opacity: 0, y: -10, transition: { duration: 0.2, ease: 'easeIn' } }}
+          >
+            {view === 'time' ? (
+              <TimelineList blocks={blocks} onSelect={(index) => setAssigningIndex(index)} />
+            ) : (
+              <TimelineByApp blocks={blocks} />
+            )}
+          </motion.div>
+        </AnimatePresence>
+      </motion.div>
 
       {assigningIndex !== null && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/50">
@@ -132,7 +150,7 @@ export function TimelineScreen() {
           </div>
         </div>
       )}
-    </div>
+    </motion.div>
   )
 }
 

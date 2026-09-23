@@ -1,5 +1,5 @@
 import { memo, useMemo, useState } from 'react'
-import { motion } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { ChevronLeft, ChevronRight, Pause, Play } from 'lucide-react'
 import { api, type Block } from '../lib/api'
@@ -10,6 +10,7 @@ import { MonthHeatmap } from '../components/MonthHeatmap'
 import { AppBreakdownList } from '../components/AppBreakdownList'
 import { DatePicker } from '../components/DatePicker'
 import { prettyAppName } from '../lib/appNames'
+import { fadeInVariants, staggerContainer } from '../lib/motion'
 import { localDateKey, startOfWeek, addDays, startOfMonth, daysInMonth, formatHoursMinutes } from '../lib/dates'
 
 const WEEKDAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
@@ -129,19 +130,11 @@ export function TodayScreen() {
   const lastBlock = selectedDayBlocks[selectedDayBlocks.length - 1]
   const tracking = !appState?.TrackingPaused
 
-  const sectionVariants = {
-    hidden: { opacity: 0, y: 12 },
-    show: { opacity: 1, y: 0 },
-  }
+  const sectionVariants = fadeInVariants(0.4, 14)
 
   return (
-    <motion.div
-      className="flex h-full flex-col gap-4 overflow-y-auto p-6"
-      initial="hidden"
-      animate="show"
-      variants={{ show: { transition: { staggerChildren: 0.08 } } }}
-    >
-      <motion.div variants={sectionVariants} className="flex items-center justify-between">
+    <div className="flex h-full flex-col gap-4 overflow-y-auto p-6">
+      <div className="flex items-center justify-between">
         <div>
           <div className="flex items-center gap-1">
             <button
@@ -175,28 +168,42 @@ export function TodayScreen() {
             {tracking ? 'Pause' : 'Resume'}
           </button>
         )}
-      </motion.div>
+      </div>
 
-      <motion.div variants={sectionVariants} className="grid grid-cols-3 gap-4">
-        <StatCard label="Weekly average" value={formatHoursMinutes(weeklyAverageMinutes)} />
-        <StatCard label={isViewingToday ? 'Today' : 'Selected day'} value={formatHoursMinutes(selectedTotalMinutes)} />
-        <StatCard label="Idle" value={formatHoursMinutes(idleSelectedMinutes)} />
-      </motion.div>
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={selectedKey}
+          className="flex flex-col gap-4"
+          initial="hidden"
+          animate="show"
+          exit={{ opacity: 0, y: -10, transition: { duration: 0.2, ease: 'easeIn' } }}
+          variants={staggerContainer(0.06)}
+        >
+          <motion.div variants={sectionVariants} className="grid grid-cols-3 gap-4">
+            <StatCard label="Weekly average" value={formatHoursMinutes(weeklyAverageMinutes)} />
+            <StatCard
+              label={isViewingToday ? 'Today' : 'Selected day'}
+              value={formatHoursMinutes(selectedTotalMinutes)}
+            />
+            <StatCard label="Idle" value={formatHoursMinutes(idleSelectedMinutes)} />
+          </motion.div>
 
-      <motion.div variants={sectionVariants} className="grid grid-cols-2 gap-4">
-        <WeekBarChart minutesByDay={weekMinutes} labels={WEEKDAY_LABELS} activeIndex={selectedIndexInWeek} />
-        <MonthHeatmap
-          monthLabel={selectedDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-          weeks={heatmapWeeks}
-          onSelectDay={setSelectedKey}
-        />
-      </motion.div>
+          <motion.div variants={sectionVariants} className="grid grid-cols-2 gap-4">
+            <WeekBarChart minutesByDay={weekMinutes} labels={WEEKDAY_LABELS} activeIndex={selectedIndexInWeek} />
+            <MonthHeatmap
+              monthLabel={selectedDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+              weeks={heatmapWeeks}
+              onSelectDay={setSelectedKey}
+            />
+          </motion.div>
 
-      <motion.div variants={sectionVariants}>
-        <h2 className="mb-2 text-sm font-semibold text-on-surface-variant">Apps</h2>
-        <AppBreakdownList entries={appBreakdown} />
-      </motion.div>
-    </motion.div>
+          <motion.div variants={sectionVariants}>
+            <h2 className="mb-2 text-sm font-semibold text-on-surface-variant">Apps</h2>
+            <AppBreakdownList entries={appBreakdown} />
+          </motion.div>
+        </motion.div>
+      </AnimatePresence>
+    </div>
   )
 }
 

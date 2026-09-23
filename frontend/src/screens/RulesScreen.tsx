@@ -1,9 +1,13 @@
 import { useState } from 'react'
+import { motion } from 'framer-motion'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '../lib/api'
 import { queryKeys } from '../lib/queryClient'
 import { RulesGraph } from '../components/RulesGraph'
 import { Select } from '../components/Select'
+import { fadeInVariants, staggerContainer } from '../lib/motion'
+
+const sectionVariants = fadeInVariants(0.35, 10)
 
 export function RulesScreen() {
   const queryClient = useQueryClient()
@@ -35,12 +39,17 @@ export function RulesScreen() {
   })
 
   return (
-    <div className="flex h-full flex-col gap-4 p-6">
-      <div className="flex justify-center overflow-auto">
+    <motion.div
+      className="flex h-full flex-col gap-4 p-6"
+      initial="hidden"
+      animate="show"
+      variants={staggerContainer()}
+    >
+      <motion.div variants={sectionVariants} className="min-h-0 flex-1 overflow-hidden rounded-lg bg-surface-container">
         <RulesGraph rules={rules} projects={projects} onDeleteRule={(id) => deleteMutation.mutate(id)} />
-      </div>
+      </motion.div>
 
-      <div className="flex items-end gap-2 rounded-lg bg-surface-container p-3">
+      <motion.div variants={sectionVariants} className="flex items-end gap-2 rounded-lg bg-surface-container p-3">
         <div className="flex-1">
           <label className="text-xs text-on-surface-variant">Pattern (app name substring)</label>
           <input
@@ -81,7 +90,7 @@ export function RulesScreen() {
         >
           Add rule
         </button>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   )
 }

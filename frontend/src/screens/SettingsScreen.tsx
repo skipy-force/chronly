@@ -1,15 +1,28 @@
 import { useEffect, useState } from 'react'
+import { motion } from 'framer-motion'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { FolderOpen } from 'lucide-react'
 import { api } from '../lib/api'
 import { queryKeys } from '../lib/queryClient'
 import { useUiStore, type NavStyle } from '../store/uiStore'
+import { fadeInVariants, staggerContainer } from '../lib/motion'
 
 const TIER_LABELS: Record<string, string> = {
   wayland: 'Wayland (ext-idle-notify-v1)',
   evdev: 'Raw input devices (mouse + keyboard)',
   none: 'Unavailable — window tracking only, no AFK detection',
 }
+
+const NAV_STYLE_INFO: Record<NavStyle, { label: string; description: string }> = {
+  sidebar: { label: 'Sidebar', description: 'A vertical panel on the left with icons and labels, always visible.' },
+  tabs: { label: 'Tabs', description: 'A horizontal bar of tabs across the top, like browser tabs.' },
+  palette: {
+    label: 'Command palette',
+    description: 'No visible nav bar — press Ctrl/Cmd+K anywhere to jump to a section.',
+  },
+}
+
+const sectionVariants = fadeInVariants(0.35, 10)
 
 export function SettingsScreen() {
   const { navStyle, setNavStyle } = useUiStore()
@@ -47,25 +60,38 @@ export function SettingsScreen() {
   })
 
   return (
-    <div className="flex flex-col gap-6 p-6">
-      <section>
+    <motion.div
+      className="flex flex-col gap-6 p-6"
+      initial="hidden"
+      animate="show"
+      variants={staggerContainer(0.06)}
+    >
+      <motion.section variants={sectionVariants}>
         <h2 className="mb-2 text-sm font-semibold uppercase text-on-surface-variant">Navigation style</h2>
         <div className="flex gap-2">
           {(['sidebar', 'tabs', 'palette'] as NavStyle[]).map((style) => (
             <button
               key={style}
               onClick={() => setNavStyle(style)}
-              className={`rounded-pill px-4 py-1.5 text-sm ${
-                navStyle === style ? 'bg-primary text-surface' : 'bg-surface-container text-on-surface-variant'
+              className={`relative rounded-pill px-4 py-1.5 text-sm ${
+                navStyle === style ? 'text-surface' : 'bg-surface-container text-on-surface-variant'
               }`}
             >
-              {style}
+              {navStyle === style && (
+                <motion.div
+                  layoutId="nav-style-pill"
+                  className="absolute inset-0 rounded-pill bg-primary"
+                  transition={{ type: 'spring', bounce: 0.25, duration: 0.4 }}
+                />
+              )}
+              <span className="relative">{NAV_STYLE_INFO[style].label}</span>
             </button>
           ))}
         </div>
-      </section>
+        <p className="mt-2 text-xs text-on-surface-variant">{NAV_STYLE_INFO[navStyle].description}</p>
+      </motion.section>
 
-      <section>
+      <motion.section variants={sectionVariants}>
         <h2 className="mb-2 text-sm font-semibold uppercase text-on-surface-variant">AFK threshold</h2>
         <div className="flex items-center gap-2">
           <input
@@ -86,9 +112,9 @@ export function SettingsScreen() {
             Save
           </button>
         </div>
-      </section>
+      </motion.section>
 
-      <section>
+      <motion.section variants={sectionVariants}>
         <h2 className="mb-2 text-sm font-semibold uppercase text-on-surface-variant">Idle detection</h2>
         <div
           className={`rounded-lg p-3 text-sm ${
@@ -97,9 +123,9 @@ export function SettingsScreen() {
         >
           {tier ? TIER_LABELS[tier] ?? tier : 'Loading...'}
         </div>
-      </section>
+      </motion.section>
 
-      <section>
+      <motion.section variants={sectionVariants}>
         <h2 className="mb-2 text-sm font-semibold uppercase text-on-surface-variant">Diagnostics</h2>
         <div className="flex flex-col gap-2 rounded-lg bg-surface-container p-3 text-sm">
           <div className="flex items-center justify-between gap-4">
@@ -118,7 +144,7 @@ export function SettingsScreen() {
             Open data folder
           </button>
         </div>
-      </section>
-    </div>
+      </motion.section>
+    </motion.div>
   )
 }
