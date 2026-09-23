@@ -1,4 +1,5 @@
 import { formatHoursMinutes } from '../lib/dates'
+import { AppIconBadge } from '../lib/appIcons'
 
 interface AppBreakdownEntry {
   appName: string
@@ -24,9 +25,7 @@ export function AppBreakdownList({ entries }: AppBreakdownListProps) {
     <div className="flex flex-col gap-2">
       {entries.map((entry) => (
         <div key={entry.appName} className="flex items-center gap-3 rounded-lg bg-surface-container p-3">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-surface-container-high text-xs font-semibold uppercase text-on-surface-variant">
-            {entry.appName.charAt(0) || '?'}
-          </div>
+          <AppIconBadge appName={entry.appName} />
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-medium">{entry.appName || 'Unknown'}</p>
             <div className="mt-1 h-1.5 overflow-hidden rounded-pill bg-surface-container-high">

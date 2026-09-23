@@ -4,17 +4,13 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { api } from '../lib/api'
 import { queryKeys } from '../lib/queryClient'
 import { TimelineBar } from '../components/TimelineBar'
+import { DatePicker } from '../components/DatePicker'
 import { localDateKey } from '../lib/dates'
 
 function addDays(dateStr: string, delta: number): string {
   const d = new Date(dateStr + 'T00:00:00')
   d.setDate(d.getDate() + delta)
   return localDateKey(d)
-}
-
-function formatDateLabel(dateStr: string): string {
-  const d = new Date(dateStr + 'T00:00:00')
-  return d.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })
 }
 
 export function TimelineScreen() {
@@ -54,17 +50,7 @@ export function TimelineScreen() {
           >
             <ChevronLeft size={16} />
           </button>
-          <div className="relative">
-            <span className="pointer-events-none block rounded-pill bg-surface-container px-3 py-1.5 text-sm">
-              {formatDateLabel(date)}
-            </span>
-            <input
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              className="absolute inset-0 cursor-pointer opacity-0"
-            />
-          </div>
+          <DatePicker dateKey={date} onChange={setDate} />
           <button
             onClick={() => setDate((d) => addDays(d, 1))}
             className="rounded-pill p-1.5 text-on-surface-variant hover:bg-surface-container"
@@ -78,9 +64,7 @@ export function TimelineScreen() {
         </p>
       </div>
 
-      <div className="min-h-0 flex-1">
-        <TimelineBar blocks={blocks} dayStartIso={start} onSelect={(index) => setAssigningIndex(index)} />
-      </div>
+      <TimelineBar blocks={blocks} dayStartIso={start} onSelect={(index) => setAssigningIndex(index)} />
 
       {assigningIndex !== null && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/50">

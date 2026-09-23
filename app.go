@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"time"
 
@@ -19,7 +20,12 @@ import (
 const (
 	afkThreshold      = 3 * time.Minute
 	waylandIdleMillis = 60000
+	AppVersion        = "0.1.0-dev"
 )
+
+var openFileManager = func(dir string) error {
+	return exec.Command("xdg-open", dir).Start()
+}
 
 type App struct {
 	ctx              context.Context
@@ -28,6 +34,7 @@ type App struct {
 	tray             *Tray
 	idleDetectorTier string
 	themeWatcher     *fsnotify.Watcher
+	dbPath           string
 }
 
 func NewApp() *App {
@@ -46,6 +53,7 @@ func (a *App) startup(ctx context.Context) {
 		log.Fatalf("open storage: %v", err)
 	}
 	a.store = store
+	a.dbPath = path
 
 	runCtx, cancel := context.WithCancel(ctx)
 	a.cancel = cancel
@@ -201,6 +209,18 @@ func (a *App) resolveIdleDetector(ctx context.Context) (tracker.IdleDetector, fu
 
 func (a *App) GetIdleDetectorTier() string {
 	return a.idleDetectorTier
+}
+
+func (a *App) GetDBPath() string {
+	return a.dbPath
+}
+
+func (a *App) GetAppVersion() string {
+	return AppVersion
+}
+
+func (a *App) OpenDataFolder() error {
+	return openFileManager(filepath.Dir(a.dbPath))
 }
 
 type noopIdleDetector struct{}

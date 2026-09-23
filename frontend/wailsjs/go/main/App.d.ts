@@ -15,6 +15,10 @@ export function DeleteAssignmentRule(arg1:number):Promise<void>;
 
 export function GetAppState():Promise<tracker.AppState>;
 
+export function GetAppVersion():Promise<string>;
+
+export function GetDBPath():Promise<string>;
+
 export function GetIdleDetectorTier():Promise<string>;
 
 export function GetThemeCSS():Promise<string>;
@@ -34,6 +38,8 @@ export function ListDoneTasksByProject(arg1:number):Promise<Array<tracker.Task>>
 export function ListProjects():Promise<Array<tracker.Project>>;
 
 export function ListTasksByProject(arg1:number):Promise<Array<tracker.Task>>;
+
+export function OpenDataFolder():Promise<void>;
 
 export function SetAFKThreshold(arg1:number):Promise<void>;
 

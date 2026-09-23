@@ -26,6 +26,14 @@ export function GetAppState() {
   return window['go']['main']['App']['GetAppState']();
 }
 
+export function GetAppVersion() {
+  return window['go']['main']['App']['GetAppVersion']();
+}
+
+export function GetDBPath() {
+  return window['go']['main']['App']['GetDBPath']();
+}
+
 export function GetIdleDetectorTier() {
   return window['go']['main']['App']['GetIdleDetectorTier']();
 }
@@ -64,6 +72,10 @@ export function ListProjects() {
 
 export function ListTasksByProject(arg1) {
   return window['go']['main']['App']['ListTasksByProject'](arg1);
+}
+
+export function OpenDataFolder() {
+  return window['go']['main']['App']['OpenDataFolder']();
 }
 
 export function SetAFKThreshold(arg1) {

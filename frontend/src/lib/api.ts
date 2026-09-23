@@ -41,6 +41,12 @@ export const api = {
   deleteAssignmentRule: (id: number) => App.DeleteAssignmentRule(id),
 
   getIdleDetectorTier: () => App.GetIdleDetectorTier(),
+
+  setAFKThreshold: (minutes: number) => App.SetAFKThreshold(minutes),
+
+  getDBPath: () => App.GetDBPath(),
+  getAppVersion: () => App.GetAppVersion(),
+  openDataFolder: () => App.OpenDataFolder(),
 }
 
 export function useQueryEvents() {
