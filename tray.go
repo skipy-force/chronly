@@ -15,6 +15,9 @@ import (
 //go:embed build/appicon.png
 var trayIcon []byte
 
+//go:embed build/appicon-paused.png
+var trayIconPaused []byte
+
 const traySlots = 20
 
 type trayTaskSlot struct {
@@ -23,10 +26,12 @@ type trayTaskSlot struct {
 }
 
 type Tray struct {
-	app    *App
-	status *systray.MenuItem
-	pause  *systray.MenuItem
-	slots  [traySlots]trayTaskSlot
+	app         *App
+	status      *systray.MenuItem
+	pause       *systray.MenuItem
+	slots       [traySlots]trayTaskSlot
+	iconPaused  bool
+	iconSetOnce bool
 }
 
 func newTray(app *App) *Tray {
@@ -131,6 +136,16 @@ func (t *Tray) refresh() {
 			t.pause.Uncheck()
 		}
 		t.status.SetTitle(t.statusLabel(state))
+
+		if !t.iconSetOnce || state.TrackingPaused != t.iconPaused {
+			if state.TrackingPaused {
+				systray.SetIcon(trayIconPaused)
+			} else {
+				systray.SetIcon(trayIcon)
+			}
+			t.iconPaused = state.TrackingPaused
+			t.iconSetOnce = true
+		}
 	}
 
 	projects, err := t.app.store.ListProjects()
