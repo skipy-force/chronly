@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"sort"
 	"time"
 
 	"chronly/backend/storage"
@@ -14,12 +15,43 @@ import (
 
 const liveStatusStaleAfter = 10 * time.Second
 
+type appMinutes struct {
+	AppName string `json:"app_name"`
+	Minutes int    `json:"minutes"`
+}
+
 type statusOutput struct {
-	Running        bool   `json:"running"`
-	Paused         bool   `json:"paused"`
-	AppName        string `json:"app_name"`
-	WindowTitle    string `json:"window_title"`
-	ElapsedSeconds int    `json:"elapsed_seconds"`
+	Running        bool         `json:"running"`
+	Paused         bool         `json:"paused"`
+	AppName        string       `json:"app_name"`
+	WindowTitle    string       `json:"window_title"`
+	ElapsedSeconds int          `json:"elapsed_seconds"`
+	TopAppsToday   []appMinutes `json:"top_apps_today"`
+}
+
+func topAppsFromBlocks(blocks []tracker.Block, limit int) []appMinutes {
+	totals := map[string]time.Duration{}
+	for _, b := range blocks {
+		if b.AppName == "" {
+			continue
+		}
+		totals[b.AppName] += b.EndTime.Sub(b.StartTime)
+	}
+
+	list := make([]appMinutes, 0, len(totals))
+	for name, d := range totals {
+		list = append(list, appMinutes{AppName: name, Minutes: int(d.Minutes())})
+	}
+	sort.Slice(list, func(i, j int) bool {
+		if list[i].Minutes != list[j].Minutes {
+			return list[i].Minutes > list[j].Minutes
+		}
+		return list[i].AppName < list[j].AppName
+	})
+	if len(list) > limit {
+		list = list[:limit]
+	}
+	return list
 }
 
 func buildStatusOutput(status tracker.LiveStatus, now time.Time) statusOutput {
@@ -95,7 +127,16 @@ func runStatusCommand(args []string) int {
 		return 1
 	}
 
-	out := buildStatusOutput(status, time.Now().UTC())
+	now := time.Now()
+	dayStart := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+	todayBlocks, err := store.ListActivityBlocksForRange(dayStart.UTC(), dayStart.Add(24*time.Hour).UTC())
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "list today's blocks:", err)
+		return 1
+	}
+
+	out := buildStatusOutput(status, now.UTC())
+	out.TopAppsToday = topAppsFromBlocks(todayBlocks, 3)
 
 	if !forceJSON && isatty.IsTerminal(os.Stdout.Fd()) {
 		fmt.Print(humanStatus(out))

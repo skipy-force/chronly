@@ -95,6 +95,67 @@ func TestHumanStatus_PausedIsFlaggedEvenWhileRunning(t *testing.T) {
 	}
 }
 
+func TestTopAppsFromBlocks_SumsDurationPerApp(t *testing.T) {
+	start := time.Date(2026, 1, 1, 9, 0, 0, 0, time.UTC)
+	blocks := []tracker.Block{
+		{AppName: "kitty", StartTime: start, EndTime: start.Add(10 * time.Minute)},
+		{AppName: "kitty", StartTime: start.Add(10 * time.Minute), EndTime: start.Add(15 * time.Minute)},
+		{AppName: "firefox", StartTime: start, EndTime: start.Add(5 * time.Minute)},
+	}
+
+	got := topAppsFromBlocks(blocks, 3)
+
+	if len(got) != 2 {
+		t.Fatalf("expected 2 apps, got %+v", got)
+	}
+	if got[0].AppName != "kitty" || got[0].Minutes != 15 {
+		t.Fatalf("expected kitty=15m first, got %+v", got[0])
+	}
+	if got[1].AppName != "firefox" || got[1].Minutes != 5 {
+		t.Fatalf("expected firefox=5m second, got %+v", got[1])
+	}
+}
+
+func TestTopAppsFromBlocks_TruncatesToLimit(t *testing.T) {
+	start := time.Date(2026, 1, 1, 9, 0, 0, 0, time.UTC)
+	blocks := []tracker.Block{
+		{AppName: "a", StartTime: start, EndTime: start.Add(40 * time.Minute)},
+		{AppName: "b", StartTime: start, EndTime: start.Add(30 * time.Minute)},
+		{AppName: "c", StartTime: start, EndTime: start.Add(20 * time.Minute)},
+		{AppName: "d", StartTime: start, EndTime: start.Add(10 * time.Minute)},
+	}
+
+	got := topAppsFromBlocks(blocks, 3)
+
+	if len(got) != 3 {
+		t.Fatalf("expected 3 apps after truncation, got %+v", got)
+	}
+	if got[0].AppName != "a" || got[1].AppName != "b" || got[2].AppName != "c" {
+		t.Fatalf("expected [a,b,c] in order, got %+v", got)
+	}
+}
+
+func TestTopAppsFromBlocks_IgnoresEmptyAppName(t *testing.T) {
+	start := time.Date(2026, 1, 1, 9, 0, 0, 0, time.UTC)
+	blocks := []tracker.Block{
+		{AppName: "", StartTime: start, EndTime: start.Add(40 * time.Minute)},
+		{AppName: "kitty", StartTime: start, EndTime: start.Add(5 * time.Minute)},
+	}
+
+	got := topAppsFromBlocks(blocks, 3)
+
+	if len(got) != 1 || got[0].AppName != "kitty" {
+		t.Fatalf("expected only kitty, got %+v", got)
+	}
+}
+
+func TestTopAppsFromBlocks_EmptyInputReturnsEmpty(t *testing.T) {
+	got := topAppsFromBlocks(nil, 3)
+	if len(got) != 0 {
+		t.Fatalf("expected empty result, got %+v", got)
+	}
+}
+
 func TestUsageText_MentionsStatusCommand(t *testing.T) {
 	if got := usageText(); !strings.Contains(got, "status") {
 		t.Fatalf("expected usage text to mention the status command, got %q", got)
