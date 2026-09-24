@@ -132,8 +132,10 @@ func (t *Tray) refresh() {
 	} else {
 		if state.TrackingPaused {
 			t.pause.Check()
+			t.pause.SetTitle("Resume tracking")
 		} else {
 			t.pause.Uncheck()
+			t.pause.SetTitle("Pause tracking")
 		}
 		t.status.SetTitle(t.statusLabel(state))
 
