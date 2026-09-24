@@ -8,6 +8,8 @@ import (
 
 	"chronly/backend/storage"
 	"chronly/backend/tracker"
+
+	"github.com/mattn/go-isatty"
 )
 
 const liveStatusStaleAfter = 10 * time.Second
@@ -37,7 +39,43 @@ func buildStatusOutput(status tracker.LiveStatus, now time.Time) statusOutput {
 	return out
 }
 
-func runStatusCommand() int {
+func formatElapsed(seconds int) string {
+	d := time.Duration(seconds) * time.Second
+	h := int(d.Hours())
+	m := int(d.Minutes()) % 60
+	if h > 0 {
+		return fmt.Sprintf("%dh%02dm", h, m)
+	}
+	return fmt.Sprintf("%dm", m)
+}
+
+func humanStatus(out statusOutput) string {
+	if !out.Running {
+		if out.Paused {
+			return "chronly: paused, not running\n"
+		}
+		return "chronly: not running\n"
+	}
+
+	appName := out.AppName
+	if appName == "" {
+		appName = "no active window"
+	}
+	line := fmt.Sprintf("%s · %s\n", appName, formatElapsed(out.ElapsedSeconds))
+	if out.Paused {
+		line = "⏸ paused — " + line
+	}
+	return line
+}
+
+func runStatusCommand(args []string) int {
+	forceJSON := false
+	for _, a := range args {
+		if a == "--json" {
+			forceJSON = true
+		}
+	}
+
 	path, err := resolveDBPath()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "resolve db path:", err)
@@ -57,7 +95,14 @@ func runStatusCommand() int {
 		return 1
 	}
 
-	data, err := json.Marshal(buildStatusOutput(status, time.Now().UTC()))
+	out := buildStatusOutput(status, time.Now().UTC())
+
+	if !forceJSON && isatty.IsTerminal(os.Stdout.Fd()) {
+		fmt.Print(humanStatus(out))
+		return 0
+	}
+
+	data, err := json.Marshal(out)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "marshal status:", err)
 		return 1
@@ -66,12 +111,19 @@ func runStatusCommand() int {
 	return 0
 }
 
+func usageText() string {
+	return "Usage: chronly [status [--json]]\n\nCommands:\n  status   Print current tracking status and exit\n           (human-readable in a terminal, JSON when piped, or with --json)\n\nRun chronly with no arguments to launch the GUI.\n"
+}
+
 func runCLI(args []string) int {
 	switch args[0] {
 	case "status":
-		return runStatusCommand()
+		return runStatusCommand(args[1:])
+	case "--help", "-h", "help":
+		fmt.Print(usageText())
+		return 0
 	default:
-		fmt.Fprintf(os.Stderr, "unknown command %q\n\nUsage: chronly [status]\n", args[0])
+		fmt.Fprintf(os.Stderr, "unknown command %q\n\n%s", args[0], usageText())
 		return 1
 	}
 }

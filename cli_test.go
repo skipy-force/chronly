@@ -1,6 +1,7 @@
 package main
 
 import (
+	"strings"
 	"testing"
 	"time"
 
@@ -58,6 +59,45 @@ func TestBuildStatusOutput_NeverUpdatedReportsNotRunning(t *testing.T) {
 
 	if out.Running {
 		t.Fatal("expected Running=false when the app has never written a live status")
+	}
+}
+
+func TestFormatElapsed_MinutesOnlyUnderAnHour(t *testing.T) {
+	if got := formatElapsed(305); got != "5m" {
+		t.Fatalf("formatElapsed(305) = %q, want %q", got, "5m")
+	}
+}
+
+func TestFormatElapsed_HoursAndMinutesOverAnHour(t *testing.T) {
+	if got := formatElapsed(3725); got != "1h02m" {
+		t.Fatalf("formatElapsed(3725) = %q, want %q", got, "1h02m")
+	}
+}
+
+func TestHumanStatus_NotRunning(t *testing.T) {
+	got := humanStatus(statusOutput{Running: false})
+	if !strings.Contains(got, "not running") {
+		t.Fatalf("expected a not-running message, got %q", got)
+	}
+}
+
+func TestHumanStatus_RunningShowsAppAndElapsed(t *testing.T) {
+	got := humanStatus(statusOutput{Running: true, AppName: "kitty", ElapsedSeconds: 305})
+	if !strings.Contains(got, "kitty") || !strings.Contains(got, "5m") {
+		t.Fatalf("expected app name and elapsed time in output, got %q", got)
+	}
+}
+
+func TestHumanStatus_PausedIsFlaggedEvenWhileRunning(t *testing.T) {
+	got := humanStatus(statusOutput{Running: true, Paused: true, AppName: "kitty", ElapsedSeconds: 60})
+	if !strings.Contains(strings.ToLower(got), "paused") {
+		t.Fatalf("expected paused state to be visible, got %q", got)
+	}
+}
+
+func TestUsageText_MentionsStatusCommand(t *testing.T) {
+	if got := usageText(); !strings.Contains(got, "status") {
+		t.Fatalf("expected usage text to mention the status command, got %q", got)
 	}
 }
 
