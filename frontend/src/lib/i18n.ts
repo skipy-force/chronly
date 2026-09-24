@@ -130,6 +130,9 @@ const dict: Record<Lang, Record<string, string>> = {
     'editProject.unarchive': 'Unarchive',
 
     'rules.pattern': 'Pattern (app name substring)',
+    'rules.appNamePattern': 'App name contains',
+    'rules.windowTitlePattern': 'Window title contains',
+    'rules.conditionsHint': 'Set one or both — a rule needs at least one to match anything',
     'rules.project': 'Project',
     'rules.priority': 'Priority',
     'rules.addRule': 'Add rule',
@@ -280,6 +283,9 @@ const dict: Record<Lang, Record<string, string>> = {
     'editProject.unarchive': 'Разархивировать',
 
     'rules.pattern': 'Паттерн (подстрока имени приложения)',
+    'rules.appNamePattern': 'Имя приложения содержит',
+    'rules.windowTitlePattern': 'Заголовок окна содержит',
+    'rules.conditionsHint': 'Заполни одно или оба поля — иначе правило никогда не сработает',
     'rules.project': 'Проект',
     'rules.priority': 'Приоритет',
     'rules.addRule': 'Добавить правило',

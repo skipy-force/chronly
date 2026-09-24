@@ -3,12 +3,12 @@ package tracker
 import "strings"
 
 type Rule struct {
-	ID          int64
-	PatternType string
-	Pattern     string
-	ProjectID   int64
-	TaskID      *int64
-	Priority    int
+	ID                 int64
+	AppNamePattern     *string
+	WindowTitlePattern *string
+	ProjectID          int64
+	TaskID             *int64
+	Priority           int
 }
 
 type Assignment struct {
@@ -24,21 +24,26 @@ func Resolve(b Block, currentTaskID *int64, currentTaskProjectID *int64, rules [
 	}
 
 	for _, r := range rules {
-		var subject string
-		switch r.PatternType {
-		case "app_name":
-			subject = b.AppName
-		case "window_title":
-			subject = b.WindowTitle
-		default:
+		if !r.matches(b) {
 			continue
 		}
-		if strings.Contains(subject, r.Pattern) {
-			assignedBy := "rule"
-			projectID := r.ProjectID
-			return Assignment{ProjectID: &projectID, TaskID: r.TaskID, AssignedBy: &assignedBy}
-		}
+		assignedBy := "rule"
+		projectID := r.ProjectID
+		return Assignment{ProjectID: &projectID, TaskID: r.TaskID, AssignedBy: &assignedBy}
 	}
 
 	return Assignment{}
+}
+
+func (r Rule) matches(b Block) bool {
+	if r.AppNamePattern == nil && r.WindowTitlePattern == nil {
+		return false
+	}
+	if r.AppNamePattern != nil && !strings.Contains(b.AppName, *r.AppNamePattern) {
+		return false
+	}
+	if r.WindowTitlePattern != nil && !strings.Contains(b.WindowTitle, *r.WindowTitlePattern) {
+		return false
+	}
+	return true
 }

@@ -19,6 +19,11 @@ interface GraphNode extends SimulationNodeDatum {
   ruleId?: number
 }
 
+function ruleLabel(r: tracker.Rule): string {
+  const parts = [r.AppNamePattern, r.WindowTitlePattern].filter((p): p is string => !!p)
+  return parts.join(' · ')
+}
+
 interface GraphLink extends SimulationLinkDatum<GraphNode> {}
 
 interface RulesGraphProps {
@@ -65,7 +70,7 @@ export function RulesGraph({ rules, projects, onDeleteRule, onEditRule }: RulesG
     const ruleNodes: GraphNode[] = rules.map((r) => ({
       id: `rule-${r.ID}`,
       kind: 'rule',
-      label: r.Pattern,
+      label: ruleLabel(r),
       ruleId: r.ID,
     }))
 

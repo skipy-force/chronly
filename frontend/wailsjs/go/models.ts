@@ -119,8 +119,8 @@ export namespace tracker {
 	}
 	export class Rule {
 	    ID: number;
-	    PatternType: string;
-	    Pattern: string;
+	    AppNamePattern?: string;
+	    WindowTitlePattern?: string;
 	    ProjectID: number;
 	    TaskID?: number;
 	    Priority: number;
@@ -132,8 +132,8 @@ export namespace tracker {
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.ID = source["ID"];
-	        this.PatternType = source["PatternType"];
-	        this.Pattern = source["Pattern"];
+	        this.AppNamePattern = source["AppNamePattern"];
+	        this.WindowTitlePattern = source["WindowTitlePattern"];
 	        this.ProjectID = source["ProjectID"];
 	        this.TaskID = source["TaskID"];
 	        this.Priority = source["Priority"];

@@ -4,7 +4,7 @@ import "chronly/backend/tracker"
 
 func (s *Store) ListAssignmentRulesByPriority() ([]tracker.Rule, error) {
 	rows, err := s.db.Query(
-		`SELECT id, pattern_type, pattern, project_id, task_id, priority
+		`SELECT id, app_name_pattern, window_title_pattern, project_id, task_id, priority
 		 FROM assignment_rules ORDER BY priority DESC, id ASC`,
 	)
 	if err != nil {
@@ -15,7 +15,7 @@ func (s *Store) ListAssignmentRulesByPriority() ([]tracker.Rule, error) {
 	rules := []tracker.Rule{}
 	for rows.Next() {
 		var r tracker.Rule
-		if err := rows.Scan(&r.ID, &r.PatternType, &r.Pattern, &r.ProjectID, &r.TaskID, &r.Priority); err != nil {
+		if err := rows.Scan(&r.ID, &r.AppNamePattern, &r.WindowTitlePattern, &r.ProjectID, &r.TaskID, &r.Priority); err != nil {
 			return nil, err
 		}
 		rules = append(rules, r)
@@ -25,9 +25,9 @@ func (s *Store) ListAssignmentRulesByPriority() ([]tracker.Rule, error) {
 
 func (s *Store) CreateAssignmentRule(r tracker.Rule) (int64, error) {
 	res, err := s.db.Exec(
-		`INSERT INTO assignment_rules (pattern_type, pattern, project_id, task_id, priority)
+		`INSERT INTO assignment_rules (app_name_pattern, window_title_pattern, project_id, task_id, priority)
 		 VALUES (?, ?, ?, ?, ?)`,
-		r.PatternType, r.Pattern, r.ProjectID, r.TaskID, r.Priority,
+		r.AppNamePattern, r.WindowTitlePattern, r.ProjectID, r.TaskID, r.Priority,
 	)
 	if err != nil {
 		return 0, err
@@ -37,9 +37,9 @@ func (s *Store) CreateAssignmentRule(r tracker.Rule) (int64, error) {
 
 func (s *Store) UpdateAssignmentRule(r tracker.Rule) error {
 	_, err := s.db.Exec(
-		`UPDATE assignment_rules SET pattern_type = ?, pattern = ?, project_id = ?, task_id = ?, priority = ?
+		`UPDATE assignment_rules SET app_name_pattern = ?, window_title_pattern = ?, project_id = ?, task_id = ?, priority = ?
 		 WHERE id = ?`,
-		r.PatternType, r.Pattern, r.ProjectID, r.TaskID, r.Priority, r.ID,
+		r.AppNamePattern, r.WindowTitlePattern, r.ProjectID, r.TaskID, r.Priority, r.ID,
 	)
 	return err
 }
