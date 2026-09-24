@@ -70,6 +70,27 @@ func (f *fakeSink) SaveActivityBlock(b Block, a Assignment) (int64, error) {
 	return int64(len(f.saved)), nil
 }
 
+type fakeStatusSink struct {
+	mu       sync.Mutex
+	statuses []LiveStatus
+}
+
+func (f *fakeStatusSink) UpdateLiveStatus(status LiveStatus) error {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.statuses = append(f.statuses, status)
+	return nil
+}
+
+func (f *fakeStatusSink) last() (LiveStatus, bool) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	if len(f.statuses) == 0 {
+		return LiveStatus{}, false
+	}
+	return f.statuses[len(f.statuses)-1], true
+}
+
 func TestRunner_PersistsClosedBlockOnWindowChange(t *testing.T) {
 	tr := &fakeTracker{
 		events: []WindowInfo{
@@ -79,7 +100,7 @@ func TestRunner_PersistsClosedBlockOnWindowChange(t *testing.T) {
 		delay: 10 * time.Millisecond,
 	}
 	sink := &fakeSink{}
-	r := NewRunner(tr, &fakeIdle{}, 3*time.Minute, &fakeRules{}, &fakeState{}, sink)
+	r := NewRunner(tr, &fakeIdle{}, 3*time.Minute, &fakeRules{}, &fakeState{}, sink, &fakeStatusSink{})
 	r.pollInterval = 5 * time.Millisecond
 
 	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
@@ -106,7 +127,7 @@ func TestRunner_PauseClosesOpenBlockAndSkipsAggregation(t *testing.T) {
 	}
 	sink := &fakeSink{}
 	state := &fakeState{}
-	r := NewRunner(tr, &fakeIdle{}, 3*time.Minute, &fakeRules{}, state, sink)
+	r := NewRunner(tr, &fakeIdle{}, 3*time.Minute, &fakeRules{}, state, sink, &fakeStatusSink{})
 	r.pollInterval = 5 * time.Millisecond
 
 	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
@@ -136,7 +157,7 @@ func TestRunner_CallsOnBlockSavedWhenBlockCloses(t *testing.T) {
 		delay: 10 * time.Millisecond,
 	}
 	sink := &fakeSink{}
-	r := NewRunner(tr, &fakeIdle{}, 3*time.Minute, &fakeRules{}, &fakeState{}, sink)
+	r := NewRunner(tr, &fakeIdle{}, 3*time.Minute, &fakeRules{}, &fakeState{}, sink, &fakeStatusSink{})
 	r.pollInterval = 5 * time.Millisecond
 
 	var saved []Block
@@ -165,7 +186,7 @@ func TestRunner_FlushesStaleOpenBlockOnLargeWallClockGap(t *testing.T) {
 	}
 	sink := &fakeSink{}
 	idle := &fakeIdle{}
-	r := NewRunner(tr, idle, 3*time.Minute, &fakeRules{}, &fakeState{}, sink)
+	r := NewRunner(tr, idle, 3*time.Minute, &fakeRules{}, &fakeState{}, sink, &fakeStatusSink{})
 	r.pollInterval = 30 * time.Millisecond
 	r.maxSampleGap = 10 * time.Millisecond
 
@@ -186,6 +207,68 @@ func TestRunner_FlushesStaleOpenBlockOnLargeWallClockGap(t *testing.T) {
 	}
 }
 
+func TestRunner_WritesLiveStatusPeriodically(t *testing.T) {
+	tr := &fakeTracker{
+		events: []WindowInfo{{AppName: "kitty", WindowTitle: "~/chronly"}},
+		delay:  200 * time.Millisecond,
+	}
+	sink := &fakeSink{}
+	status := &fakeStatusSink{}
+	r := NewRunner(tr, &fakeIdle{}, 3*time.Minute, &fakeRules{}, &fakeState{}, sink, status)
+	r.pollInterval = 5 * time.Millisecond
+	r.statusWriteInterval = 10 * time.Millisecond
+
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Millisecond)
+	defer cancel()
+	r.Run(ctx)
+
+	last, ok := status.last()
+	if !ok {
+		t.Fatal("expected at least one live status write")
+	}
+	if last.AppName != "kitty" || last.WindowTitle != "~/chronly" {
+		t.Fatalf("expected live status to reflect the open block, got %+v", last)
+	}
+	if last.BlockStart.IsZero() {
+		t.Fatal("expected a non-zero BlockStart on the live status")
+	}
+	if last.UpdatedAt.IsZero() {
+		t.Fatal("expected a non-zero UpdatedAt on the live status")
+	}
+
+	status.mu.Lock()
+	count := len(status.statuses)
+	status.mu.Unlock()
+	if count < 2 {
+		t.Fatalf("expected multiple periodic writes over the run, got %d", count)
+	}
+}
+
+func TestRunner_WritesLiveStatusReflectingPausedState(t *testing.T) {
+	tr := &fakeTracker{
+		events: []WindowInfo{{AppName: "kitty", WindowTitle: "~/chronly"}},
+		delay:  200 * time.Millisecond,
+	}
+	sink := &fakeSink{}
+	status := &fakeStatusSink{}
+	state := &fakeState{state: AppState{TrackingPaused: true}}
+	r := NewRunner(tr, &fakeIdle{}, 3*time.Minute, &fakeRules{}, state, sink, status)
+	r.pollInterval = 5 * time.Millisecond
+	r.statusWriteInterval = 5 * time.Millisecond
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Millisecond)
+	defer cancel()
+	r.Run(ctx)
+
+	last, ok := status.last()
+	if !ok {
+		t.Fatal("expected at least one live status write")
+	}
+	if !last.Paused {
+		t.Fatal("expected live status to reflect TrackingPaused=true")
+	}
+}
+
 func TestRunner_AppliesConfiguredAFKThreshold(t *testing.T) {
 	tr := &fakeTracker{
 		events: []WindowInfo{{AppName: "code", WindowTitle: "main.go"}},
@@ -194,7 +277,7 @@ func TestRunner_AppliesConfiguredAFKThreshold(t *testing.T) {
 	sink := &fakeSink{}
 	state := &fakeState{state: AppState{AFKThresholdMinutes: 1}}
 	idle := &fakeIdle{}
-	r := NewRunner(tr, idle, 30*time.Minute, &fakeRules{}, state, sink)
+	r := NewRunner(tr, idle, 30*time.Minute, &fakeRules{}, state, sink, &fakeStatusSink{})
 	r.pollInterval = 5 * time.Millisecond
 
 	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)

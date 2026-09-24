@@ -5,6 +5,7 @@ go 1.25.0
 require (
 	github.com/energye/systray v1.0.3
 	github.com/fsnotify/fsnotify v1.10.1
+	github.com/mattn/go-isatty v0.0.24
 	github.com/rajveermalviya/go-wayland/wayland v0.0.0-20230130181619-0ad78d1310b2
 	github.com/wailsapp/wails/v2 v2.16.0
 	modernc.org/sqlite v1.59.0
@@ -26,7 +27,6 @@ require (
 	github.com/leaanthony/slicer v1.6.0 // indirect
 	github.com/leaanthony/u v1.1.1 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
-	github.com/mattn/go-isatty v0.0.24 // indirect
 	github.com/ncruces/go-strftime v1.0.0 // indirect
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c // indirect
 	github.com/pkg/errors v0.9.1 // indirect

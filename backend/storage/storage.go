@@ -62,7 +62,11 @@ CREATE TABLE IF NOT EXISTS app_state (
       id INTEGER PRIMARY KEY CHECK (id = 1),
       current_task_id INTEGER REFERENCES tasks(id),
       tracking_paused INTEGER NOT NULL DEFAULT 0,
-      afk_threshold_minutes INTEGER NOT NULL DEFAULT 3
+      afk_threshold_minutes INTEGER NOT NULL DEFAULT 3,
+      live_app_name TEXT NOT NULL DEFAULT '',
+      live_window_title TEXT NOT NULL DEFAULT '',
+      live_block_start DATETIME,
+      live_updated_at DATETIME
 );
 INSERT OR IGNORE INTO app_state (id, tracking_paused) VALUES (1, 0);
 
@@ -97,6 +101,27 @@ func migrate(db *sql.DB) error {
 		`UPDATE assignment_rules SET window_title_pattern = pattern WHERE pattern_type = 'window_title' AND window_title_pattern IS NULL`,
 	); err != nil {
 		if !strings.Contains(err.Error(), "no such column") {
+			return err
+		}
+	}
+
+	if _, err := db.Exec(`ALTER TABLE app_state ADD COLUMN live_app_name TEXT NOT NULL DEFAULT ''`); err != nil {
+		if !strings.Contains(err.Error(), "duplicate column") {
+			return err
+		}
+	}
+	if _, err := db.Exec(`ALTER TABLE app_state ADD COLUMN live_window_title TEXT NOT NULL DEFAULT ''`); err != nil {
+		if !strings.Contains(err.Error(), "duplicate column") {
+			return err
+		}
+	}
+	if _, err := db.Exec(`ALTER TABLE app_state ADD COLUMN live_block_start DATETIME`); err != nil {
+		if !strings.Contains(err.Error(), "duplicate column") {
+			return err
+		}
+	}
+	if _, err := db.Exec(`ALTER TABLE app_state ADD COLUMN live_updated_at DATETIME`); err != nil {
+		if !strings.Contains(err.Error(), "duplicate column") {
 			return err
 		}
 	}
