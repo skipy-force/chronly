@@ -1,6 +1,10 @@
 package storage
 
-import "chronly/backend/tracker"
+import (
+	"database/sql"
+
+	"chronly/backend/tracker"
+)
 
 func (s *Store) GetAppState() (tracker.AppState, error) {
 	var st tracker.AppState
@@ -31,4 +35,36 @@ func (s *Store) SetCurrentTask(taskID *int64) error {
 func (s *Store) SetTrackingPaused(paused bool) error {
 	_, err := s.db.Exec(`UPDATE app_state SET tracking_paused = ? WHERE id = 1`, paused)
 	return err
+}
+
+func (s *Store) UpdateLiveStatus(status tracker.LiveStatus) error {
+	var blockStart any
+	if !status.BlockStart.IsZero() {
+		blockStart = status.BlockStart.UTC()
+	}
+	_, err := s.db.Exec(
+		`UPDATE app_state SET live_app_name = ?, live_window_title = ?, live_block_start = ?, live_updated_at = ? WHERE id = 1`,
+		status.AppName, status.WindowTitle, blockStart, status.UpdatedAt.UTC(),
+	)
+	return err
+}
+
+func (s *Store) GetLiveStatus() (tracker.LiveStatus, error) {
+	var status tracker.LiveStatus
+	var paused int
+	var blockStart, updatedAt sql.NullTime
+	row := s.db.QueryRow(
+		`SELECT live_app_name, live_window_title, live_block_start, live_updated_at, tracking_paused FROM app_state WHERE id = 1`,
+	)
+	if err := row.Scan(&status.AppName, &status.WindowTitle, &blockStart, &updatedAt, &paused); err != nil {
+		return tracker.LiveStatus{}, err
+	}
+	if blockStart.Valid {
+		status.BlockStart = blockStart.Time
+	}
+	if updatedAt.Valid {
+		status.UpdatedAt = updatedAt.Time
+	}
+	status.Paused = paused != 0
+	return status, nil
 }

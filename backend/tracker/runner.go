@@ -17,29 +17,41 @@ type BlockSink interface {
 	SaveActivityBlock(b Block, a Assignment) (int64, error)
 }
 
-type Runner struct {
-	tracker         WindowTracker
-	idle            IdleDetector
-	aggregator      *Aggregator
-	rules           RuleSource
-	state           StateSource
-	sink            BlockSink
-	pollInterval    time.Duration
-	maxSampleGap    time.Duration
-	lastProcessedAt time.Time
-	OnBlockSaved    func(Block)
+type LiveStatusSink interface {
+	UpdateLiveStatus(status LiveStatus) error
 }
 
-func NewRunner(t WindowTracker, idle IdleDetector, afkThreshold time.Duration, rules RuleSource, state StateSource, sink BlockSink) *Runner {
+type Runner struct {
+	tracker             WindowTracker
+	idle                IdleDetector
+	aggregator          *Aggregator
+	rules               RuleSource
+	state               StateSource
+	sink                BlockSink
+	statusSink          LiveStatusSink
+	pollInterval        time.Duration
+	maxSampleGap        time.Duration
+	statusWriteInterval time.Duration
+	lastProcessedAt     time.Time
+	lastStatusWriteAt   time.Time
+	OnBlockSaved        func(Block)
+}
+
+func NewRunner(
+	t WindowTracker, idle IdleDetector, afkThreshold time.Duration,
+	rules RuleSource, state StateSource, sink BlockSink, statusSink LiveStatusSink,
+) *Runner {
 	return &Runner{
-		tracker:      t,
-		idle:         idle,
-		aggregator:   NewAggregator(afkThreshold),
-		rules:        rules,
-		state:        state,
-		sink:         sink,
-		pollInterval: time.Second,
-		maxSampleGap: 10 * time.Second,
+		tracker:             t,
+		idle:                idle,
+		aggregator:          NewAggregator(afkThreshold),
+		rules:               rules,
+		state:               state,
+		sink:                sink,
+		statusSink:          statusSink,
+		pollInterval:        time.Second,
+		maxSampleGap:        10 * time.Second,
+		statusWriteInterval: 2 * time.Second,
 	}
 }
 
@@ -110,11 +122,31 @@ func (r *Runner) process(s Sample) error {
 	} else {
 		block, ok = r.aggregator.Add(s)
 	}
+
+	if err := r.writeLiveStatusIfDue(s.At, state); err != nil {
+		return err
+	}
+
 	if !ok {
 		return nil
 	}
 
 	return r.saveClosedBlock(block, state)
+}
+
+func (r *Runner) writeLiveStatusIfDue(now time.Time, state AppState) error {
+	if !r.lastStatusWriteAt.IsZero() && now.Sub(r.lastStatusWriteAt) < r.statusWriteInterval {
+		return nil
+	}
+	r.lastStatusWriteAt = now
+
+	status := LiveStatus{Paused: state.TrackingPaused, UpdatedAt: now}
+	if open, ok := r.aggregator.Peek(); ok {
+		status.AppName = open.AppName
+		status.WindowTitle = open.WindowTitle
+		status.BlockStart = open.StartTime
+	}
+	return r.statusSink.UpdateLiveStatus(status)
 }
 
 func (r *Runner) saveClosedBlock(block Block, state AppState) error {

@@ -75,7 +75,7 @@ func (a *App) startup(ctx context.Context) {
 	}
 
 	windowTracker := tracker.NewHyprlandTracker()
-	runner := tracker.NewRunner(windowTracker, idle, afkThreshold, store, store, store)
+	runner := tracker.NewRunner(windowTracker, idle, afkThreshold, store, store, store, store)
 	runner.OnBlockSaved = func(b tracker.Block) {
 		emitBlockClosed(ctx, b)
 	}

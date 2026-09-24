@@ -112,6 +112,35 @@ func TestAggregator_CloseOpen(t *testing.T) {
 	}
 }
 
+func TestAggregator_Peek_ReturnsOpenBlockWithoutClosing(t *testing.T) {
+	agg := NewAggregator(3 * time.Minute)
+	win := WindowInfo{AppName: "code", WindowTitle: "main.go"}
+
+	if _, ok := agg.Peek(); ok {
+		t.Fatal("expected no open block before any Add")
+	}
+
+	agg.Add(Sample{Window: win, At: t0(0)})
+	agg.Add(Sample{Window: win, At: t0(30)})
+
+	peeked, ok := agg.Peek()
+	if !ok {
+		t.Fatal("expected an open block after Add")
+	}
+	if peeked.AppName != "code" || peeked.StartTime != t0(0) || peeked.EndTime != t0(30) {
+		t.Fatalf("unexpected peeked block: %+v", peeked)
+	}
+
+	if _, ok := agg.Peek(); !ok {
+		t.Fatal("Peek should not close the open block")
+	}
+
+	closed, ok := agg.Add(Sample{Window: win, At: t0(45)})
+	if ok {
+		t.Fatalf("same window should still merge after Peek, got closed=%+v", closed)
+	}
+}
+
 func TestAggregator_SetThreshold(t *testing.T) {
 	agg := NewAggregator(3 * time.Minute)
 	win := WindowInfo{AppName: "code", WindowTitle: "main.go"}

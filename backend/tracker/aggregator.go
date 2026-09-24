@@ -66,6 +66,13 @@ func (a *Aggregator) CloseOpen() (Block, bool) {
 	return a.closeOpen()
 }
 
+func (a *Aggregator) Peek() (Block, bool) {
+	if a.open == nil {
+		return Block{}, false
+	}
+	return *a.open, true
+}
+
 func (a *Aggregator) closeOpen() (Block, bool) {
 	if a.open == nil {
 		return Block{}, false

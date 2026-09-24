@@ -1,6 +1,11 @@
 package storage
 
-import "testing"
+import (
+	"testing"
+	"time"
+
+	"chronly/backend/tracker"
+)
 
 func TestGetAppState_DefaultsToUnsetAndNotPaused(t *testing.T) {
 	s := newTestStore(t)
@@ -86,6 +91,59 @@ func TestSetCurrentTask(t *testing.T) {
 	}
 	if st.CurrentTaskID != nil {
 		t.Fatalf("expected current task to be cleared, got %+v", st.CurrentTaskID)
+	}
+}
+
+func TestGetLiveStatus_DefaultsToEmptyBeforeAnyUpdate(t *testing.T) {
+	s := newTestStore(t)
+
+	status, err := s.GetLiveStatus()
+	if err != nil {
+		t.Fatalf("GetLiveStatus: %v", err)
+	}
+	if status.AppName != "" || !status.BlockStart.IsZero() || !status.UpdatedAt.IsZero() {
+		t.Fatalf("expected a fresh empty live status, got %+v", status)
+	}
+}
+
+func TestUpdateLiveStatus_RoundTripsThroughGetLiveStatus(t *testing.T) {
+	s := newTestStore(t)
+	blockStart := time.Date(2026, 1, 1, 12, 0, 0, 0, time.UTC)
+	updatedAt := time.Date(2026, 1, 1, 12, 5, 0, 0, time.UTC)
+
+	if err := s.UpdateLiveStatus(tracker.LiveStatus{
+		AppName: "kitty", WindowTitle: "~/chronly", BlockStart: blockStart, UpdatedAt: updatedAt,
+	}); err != nil {
+		t.Fatalf("UpdateLiveStatus: %v", err)
+	}
+
+	status, err := s.GetLiveStatus()
+	if err != nil {
+		t.Fatalf("GetLiveStatus: %v", err)
+	}
+	if status.AppName != "kitty" || status.WindowTitle != "~/chronly" {
+		t.Fatalf("unexpected app/title: %+v", status)
+	}
+	if !status.BlockStart.Equal(blockStart) || !status.UpdatedAt.Equal(updatedAt) {
+		t.Fatalf("unexpected timestamps: %+v", status)
+	}
+}
+
+func TestUpdateLiveStatus_ReflectsCurrentPausedFlag(t *testing.T) {
+	s := newTestStore(t)
+	if err := s.SetTrackingPaused(true); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.UpdateLiveStatus(tracker.LiveStatus{AppName: "code", UpdatedAt: time.Now()}); err != nil {
+		t.Fatalf("UpdateLiveStatus: %v", err)
+	}
+
+	status, err := s.GetLiveStatus()
+	if err != nil {
+		t.Fatalf("GetLiveStatus: %v", err)
+	}
+	if !status.Paused {
+		t.Fatal("expected live status to reflect that tracking is paused")
 	}
 }
 
