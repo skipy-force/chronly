@@ -96,7 +96,7 @@ export function AppDetailView({ appName, blocks, initialDateKey, actualNow, onBa
       <AnimatePresence mode="wait">
         <motion.div
           key={selectedKey}
-          className="flex flex-col gap-4"
+          className="flex h-full min-h-0 flex-col gap-4"
           initial="hidden"
           animate="show"
           exit={{ opacity: 0, y: -10, transition: { duration: 0.2, ease: 'easeIn' } }}
@@ -117,9 +117,11 @@ export function AppDetailView({ appName, blocks, initialDateKey, actualNow, onBa
             <MonthHeatmap monthLabel={monthLabel} weeks={heatmapWeeks} onSelectDay={setSelectedKey} />
           </motion.div>
 
-          <motion.div variants={sectionVariants}>
+          <motion.div variants={sectionVariants} className="flex min-h-0 flex-1 flex-col">
             <h2 className="mb-2 text-sm font-semibold text-on-surface-variant">{t('appDetail.dailyUsage')}</h2>
-            <HourlyUsageChart minutesByHour={hourly} />
+            <div className="min-h-0 flex-1">
+              <HourlyUsageChart minutesByHour={hourly} />
+            </div>
           </motion.div>
         </motion.div>
       </AnimatePresence>
