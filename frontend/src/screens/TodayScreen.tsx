@@ -25,6 +25,8 @@ import {
   computePeakHourRange,
 } from '../lib/aggregation'
 
+const MAX_PLAUSIBLE_IDLE_GAP_MINUTES = 4 * 60
+
 function endOfDay(d: Date): Date {
   const end = new Date(d)
   end.setHours(23, 59, 59, 999)
@@ -80,7 +82,7 @@ export function TodayScreen() {
       const gap =
         (new Date(selectedDayBlocks[i].StartTime).getTime() - new Date(selectedDayBlocks[i - 1].EndTime).getTime()) /
         60000
-      if (gap > 0) idle += gap
+      if (gap > 0 && gap <= MAX_PLAUSIBLE_IDLE_GAP_MINUTES) idle += gap
     }
     return idle
   }, [selectedDayBlocks])
