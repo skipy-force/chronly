@@ -18,14 +18,16 @@ type BlockSink interface {
 }
 
 type Runner struct {
-	tracker      WindowTracker
-	idle         IdleDetector
-	aggregator   *Aggregator
-	rules        RuleSource
-	state        StateSource
-	sink         BlockSink
-	pollInterval time.Duration
-	OnBlockSaved func(Block)
+	tracker         WindowTracker
+	idle            IdleDetector
+	aggregator      *Aggregator
+	rules           RuleSource
+	state           StateSource
+	sink            BlockSink
+	pollInterval    time.Duration
+	maxSampleGap    time.Duration
+	lastProcessedAt time.Time
+	OnBlockSaved    func(Block)
 }
 
 func NewRunner(t WindowTracker, idle IdleDetector, afkThreshold time.Duration, rules RuleSource, state StateSource, sink BlockSink) *Runner {
@@ -37,6 +39,7 @@ func NewRunner(t WindowTracker, idle IdleDetector, afkThreshold time.Duration, r
 		state:        state,
 		sink:         sink,
 		pollInterval: time.Second,
+		maxSampleGap: 10 * time.Second,
 	}
 }
 
@@ -56,15 +59,38 @@ func (r *Runner) Run(ctx context.Context) error {
 		case err := <-trackerErr:
 			return err
 		case last = <-updates:
-			if err := r.process(Sample{Window: last, Idle: r.idle.IdleDuration(), At: time.Now().UTC()}); err != nil {
+			if err := r.handleSample(last); err != nil {
 				return err
 			}
 		case <-ticker.C:
-			if err := r.process(Sample{Window: last, Idle: r.idle.IdleDuration(), At: time.Now().UTC()}); err != nil {
+			if err := r.handleSample(last); err != nil {
 				return err
 			}
 		}
 	}
+}
+
+func (r *Runner) handleSample(w WindowInfo) error {
+	now := time.Now().UTC()
+	if !r.lastProcessedAt.IsZero() && now.Sub(r.lastProcessedAt) > r.maxSampleGap {
+		if err := r.flushStaleOpenBlock(); err != nil {
+			return err
+		}
+	}
+	r.lastProcessedAt = now
+	return r.process(Sample{Window: w, Idle: r.idle.IdleDuration(), At: now})
+}
+
+func (r *Runner) flushStaleOpenBlock() error {
+	block, ok := r.aggregator.CloseOpen()
+	if !ok {
+		return nil
+	}
+	state, err := r.state.GetAppState()
+	if err != nil {
+		return err
+	}
+	return r.saveClosedBlock(block, state)
 }
 
 func (r *Runner) process(s Sample) error {
@@ -88,6 +114,10 @@ func (r *Runner) process(s Sample) error {
 		return nil
 	}
 
+	return r.saveClosedBlock(block, state)
+}
+
+func (r *Runner) saveClosedBlock(block Block, state AppState) error {
 	rules, err := r.rules.ListAssignmentRulesByPriority()
 	if err != nil {
 		return err

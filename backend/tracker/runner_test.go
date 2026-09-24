@@ -158,6 +158,34 @@ func TestRunner_CallsOnBlockSavedWhenBlockCloses(t *testing.T) {
 	}
 }
 
+func TestRunner_FlushesStaleOpenBlockOnLargeWallClockGap(t *testing.T) {
+	tr := &fakeTracker{
+		events: []WindowInfo{{AppName: "code", WindowTitle: "main.go"}},
+		delay:  500 * time.Millisecond,
+	}
+	sink := &fakeSink{}
+	idle := &fakeIdle{}
+	r := NewRunner(tr, idle, 3*time.Minute, &fakeRules{}, &fakeState{}, sink)
+	r.pollInterval = 30 * time.Millisecond
+	r.maxSampleGap = 10 * time.Millisecond
+
+	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+	defer cancel()
+	r.Run(ctx)
+
+	if len(sink.saved) < 1 {
+		t.Fatalf("expected the stale open block to be flushed despite idle staying 0, got %d saved: %+v", len(sink.saved), sink.saved)
+	}
+	for _, b := range sink.saved {
+		if b.AppName != "code" {
+			t.Fatalf("expected flushed blocks to be 'code', got %+v", b)
+		}
+		if !b.EndTime.After(b.StartTime) && !b.EndTime.Equal(b.StartTime) {
+			t.Fatalf("expected EndTime >= StartTime, got %+v", b)
+		}
+	}
+}
+
 func TestRunner_AppliesConfiguredAFKThreshold(t *testing.T) {
 	tr := &fakeTracker{
 		events: []WindowInfo{{AppName: "code", WindowTitle: "main.go"}},
