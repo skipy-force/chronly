@@ -43,8 +43,8 @@ CREATE TABLE IF NOT EXISTS activity_blocks (
 
 CREATE TABLE IF NOT EXISTS assignment_rules (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      pattern_type TEXT NOT NULL,
-      pattern TEXT NOT NULL,
+      app_name_pattern TEXT,
+      window_title_pattern TEXT,
       project_id INTEGER NOT NULL REFERENCES projects(id),
       task_id INTEGER REFERENCES tasks(id),
       priority INTEGER NOT NULL DEFAULT 0
@@ -75,6 +75,32 @@ func migrate(db *sql.DB) error {
 			return err
 		}
 	}
+
+	if _, err := db.Exec(`ALTER TABLE assignment_rules ADD COLUMN app_name_pattern TEXT`); err != nil {
+		if !strings.Contains(err.Error(), "duplicate column") {
+			return err
+		}
+	}
+	if _, err := db.Exec(`ALTER TABLE assignment_rules ADD COLUMN window_title_pattern TEXT`); err != nil {
+		if !strings.Contains(err.Error(), "duplicate column") {
+			return err
+		}
+	}
+	if _, err := db.Exec(
+		`UPDATE assignment_rules SET app_name_pattern = pattern WHERE pattern_type = 'app_name' AND app_name_pattern IS NULL`,
+	); err != nil {
+		if !strings.Contains(err.Error(), "no such column") {
+			return err
+		}
+	}
+	if _, err := db.Exec(
+		`UPDATE assignment_rules SET window_title_pattern = pattern WHERE pattern_type = 'window_title' AND window_title_pattern IS NULL`,
+	); err != nil {
+		if !strings.Contains(err.Error(), "no such column") {
+			return err
+		}
+	}
+
 	return nil
 }
 
