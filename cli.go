@@ -111,14 +111,43 @@ func runStatusCommand(args []string) int {
 	return 0
 }
 
+func runTogglePauseCommand() int {
+	path, err := resolveDBPath()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "resolve db path:", err)
+		return 1
+	}
+
+	store, err := storage.Open(path)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "open storage:", err)
+		return 1
+	}
+	defer store.Close()
+
+	state, err := store.GetAppState()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "get app state:", err)
+		return 1
+	}
+
+	if err := store.SetTrackingPaused(!state.TrackingPaused); err != nil {
+		fmt.Fprintln(os.Stderr, "set tracking paused:", err)
+		return 1
+	}
+	return 0
+}
+
 func usageText() string {
-	return "Usage: chronly [status [--json]]\n\nCommands:\n  status   Print current tracking status and exit\n           (human-readable in a terminal, JSON when piped, or with --json)\n\nRun chronly with no arguments to launch the GUI.\n"
+	return "Usage: chronly [status [--json]|toggle-pause]\n\nCommands:\n  status         Print current tracking status and exit\n                 (human-readable in a terminal, JSON when piped, or with --json)\n  toggle-pause   Flip tracking paused/resumed and exit\n\nRun chronly with no arguments to launch the GUI.\n"
 }
 
 func runCLI(args []string) int {
 	switch args[0] {
 	case "status":
 		return runStatusCommand(args[1:])
+	case "toggle-pause":
+		return runTogglePauseCommand()
 	case "--help", "-h", "help":
 		fmt.Print(usageText())
 		return 0
