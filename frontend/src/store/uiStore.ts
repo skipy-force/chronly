@@ -5,6 +5,7 @@ export type ScreenId = 'today' | 'timeline' | 'projects' | 'rules' | 'settings'
 export type NavStyle = 'sidebar' | 'tabs' | 'palette'
 export type TimelineView = 'time' | 'app'
 export type Lang = 'en' | 'ru'
+export type ThemePresetId = 'auto' | 'dracula' | 'nord' | 'catppuccin'
 
 interface UiState {
   activeScreen: ScreenId
@@ -25,6 +26,8 @@ interface UiState {
   setShowDeveloperSettings: (show: boolean) => void
   customAccentColor: string
   setCustomAccentColor: (color: string) => void
+  themePreset: ThemePresetId
+  setThemePreset: (preset: ThemePresetId) => void
   hasSeenOnboarding: boolean
   setHasSeenOnboarding: (seen: boolean) => void
 }
@@ -50,6 +53,8 @@ export const useUiStore = create<UiState>()(
       setShowDeveloperSettings: (show) => set({ showDeveloperSettings: show }),
       customAccentColor: '',
       setCustomAccentColor: (color) => set({ customAccentColor: color }),
+      themePreset: 'auto',
+      setThemePreset: (preset) => set({ themePreset: preset }),
       hasSeenOnboarding: false,
       setHasSeenOnboarding: (seen) => set({ hasSeenOnboarding: seen }),
     }),

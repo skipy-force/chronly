@@ -4,9 +4,10 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Droplet, ExternalLink, FolderOpen, RefreshCw, Upload, X } from 'lucide-react'
 import { api } from '../lib/api'
 import { queryKeys } from '../lib/queryClient'
-import { useUiStore, type NavStyle, type Lang } from '../store/uiStore'
+import { useUiStore, type NavStyle, type Lang, type ThemePresetId } from '../store/uiStore'
 import { useT } from '../lib/i18n'
 import { fadeInVariants, staggerContainer } from '../lib/motion'
+import { THEME_PRESETS } from '../lib/themePresets'
 import { Avatar } from '../components/Avatar'
 import chronlyLogo from '../assets/images/icon.svg'
 
@@ -327,11 +328,52 @@ function ProfileSection() {
 }
 
 function AppearanceSection() {
-  const { uiScale, setUiScale, customAccentColor, setCustomAccentColor } = useUiStore()
+  const { uiScale, setUiScale, customAccentColor, setCustomAccentColor, themePreset, setThemePreset } = useUiStore()
   const t = useT()
+
+  const presetOptions: { id: ThemePresetId; name: string; swatch: string }[] = [
+    { id: 'auto', name: t('settings.appearance.themePreset.auto'), swatch: '' },
+    ...(Object.keys(THEME_PRESETS) as Exclude<ThemePresetId, 'auto'>[]).map((id) => ({
+      id,
+      name: THEME_PRESETS[id].name,
+      swatch: THEME_PRESETS[id].colors.primary,
+    })),
+  ]
 
   return (
     <div className="flex flex-col gap-6">
+      <motion.section variants={sectionVariants}>
+        <h2 className="mb-2 text-sm font-semibold uppercase text-on-surface-variant">
+          {t('settings.appearance.themePreset')}
+        </h2>
+        <div className="flex flex-wrap gap-2">
+          {presetOptions.map((preset) => (
+            <button
+              key={preset.id}
+              onClick={() => setThemePreset(preset.id)}
+              className={`relative flex items-center gap-2 rounded-pill px-3 py-1.5 text-sm ${
+                themePreset === preset.id ? 'text-surface' : 'bg-surface-container text-on-surface-variant'
+              }`}
+            >
+              {themePreset === preset.id && (
+                <motion.div
+                  layoutId="theme-preset-pill"
+                  className="absolute inset-0 rounded-pill bg-primary"
+                  transition={{ type: 'spring', bounce: 0.25, duration: 0.4 }}
+                />
+              )}
+              <span className="relative flex items-center gap-2">
+                {preset.swatch && (
+                  <span className="h-3 w-3 rounded-full" style={{ backgroundColor: preset.swatch }} />
+                )}
+                {preset.name}
+              </span>
+            </button>
+          ))}
+        </div>
+        <p className="mt-2 text-xs text-on-surface-variant">{t('settings.appearance.themePresetHint')}</p>
+      </motion.section>
+
       <motion.section variants={sectionVariants}>
         <h2 className="mb-2 text-sm font-semibold uppercase text-on-surface-variant">
           {t('settings.appearance.uiScale')}

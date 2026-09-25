@@ -37,9 +37,12 @@ const dict: Record<Lang, Record<string, string>> = {
     'settings.profile.uploadAvatar': 'Upload avatar',
     'settings.profile.removeAvatar': 'Remove',
 
+    'settings.appearance.themePreset': 'Theme',
+    'settings.appearance.themePreset.auto': 'Auto (system theme)',
+    'settings.appearance.themePresetHint': 'Auto follows your wallpaper theme (matugen). Pick a preset to use a fixed palette instead.',
     'settings.appearance.uiScale': 'Interface size',
     'settings.appearance.accentColor': 'Accent color',
-    'settings.appearance.accentColorHint': 'Overrides the wallpaper-driven (matugen) theme color everywhere.',
+    'settings.appearance.accentColorHint': 'Overrides the primary color from the theme or preset everywhere.',
     'settings.appearance.resetToTheme': 'Reset to theme color',
 
     'settings.tracking.afkThreshold': 'AFK threshold',
@@ -190,9 +193,12 @@ const dict: Record<Lang, Record<string, string>> = {
     'settings.profile.uploadAvatar': 'Загрузить аватар',
     'settings.profile.removeAvatar': 'Убрать',
 
+    'settings.appearance.themePreset': 'Тема',
+    'settings.appearance.themePreset.auto': 'Авто (системная тема)',
+    'settings.appearance.themePresetHint': 'Авто следует за темой из обоев (matugen). Выбери пресет, чтобы использовать фиксированную палитру.',
     'settings.appearance.uiScale': 'Масштаб интерфейса',
     'settings.appearance.accentColor': 'Цвет акцента',
-    'settings.appearance.accentColorHint': 'Переопределяет цвет темы, взятый из обоев (matugen), везде в приложении.',
+    'settings.appearance.accentColorHint': 'Переопределяет основной цвет темы или пресета везде в приложении.',
     'settings.appearance.resetToTheme': 'Сбросить к цвету темы',
 
     'settings.tracking.afkThreshold': 'Порог AFK',

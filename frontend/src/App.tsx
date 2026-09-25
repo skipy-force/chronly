@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClient } from './lib/queryClient'
 import { installMatugenTheme } from './lib/theme'
+import { applyThemePreset } from './lib/themePresets'
 import { useQueryEvents } from './lib/api'
 import { Shell } from './components/shells'
 import { ErrorBoundary } from './components/ErrorBoundary'
@@ -48,21 +49,21 @@ function useUiScale() {
   }, [uiScale])
 }
 
-function useCustomAccentColor() {
+function useThemePreset() {
+  const themePreset = useUiStore((s) => s.themePreset)
   const customAccentColor = useUiStore((s) => s.customAccentColor)
   useEffect(() => {
+    applyThemePreset(themePreset)
     if (customAccentColor) {
       document.documentElement.style.setProperty('--color-primary', customAccentColor)
-    } else {
-      document.documentElement.style.removeProperty('--color-primary')
     }
-  }, [customAccentColor])
+  }, [themePreset, customAccentColor])
 }
 
 export default function App() {
   useEffect(() => installMatugenTheme(), [])
   useUiScale()
-  useCustomAccentColor()
+  useThemePreset()
 
   return (
     <QueryClientProvider client={queryClient}>
