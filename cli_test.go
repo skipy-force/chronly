@@ -156,6 +156,27 @@ func TestTopAppsFromBlocks_EmptyInputReturnsEmpty(t *testing.T) {
 	}
 }
 
+func TestPrettyAppName_UsesKnownOverride(t *testing.T) {
+	if got := prettyAppName("kitty"); got != "Kitty" {
+		t.Fatalf("prettyAppName(kitty) = %q, want %q", got, "Kitty")
+	}
+	if got := prettyAppName("dev.zed.Zed"); got != "Zed" {
+		t.Fatalf("prettyAppName(dev.zed.Zed) = %q, want %q", got, "Zed")
+	}
+}
+
+func TestPrettyAppName_TitleCasesLastSegmentWhenUnknown(t *testing.T) {
+	if got := prettyAppName("org.some-project.my_app"); got != "My App" {
+		t.Fatalf("prettyAppName(org.some-project.my_app) = %q, want %q", got, "My App")
+	}
+}
+
+func TestPrettyAppName_EmptyStaysEmpty(t *testing.T) {
+	if got := prettyAppName(""); got != "" {
+		t.Fatalf("prettyAppName(\"\") = %q, want empty", got)
+	}
+}
+
 func TestUsageText_MentionsStatusCommand(t *testing.T) {
 	if got := usageText(); !strings.Contains(got, "status") {
 		t.Fatalf("expected usage text to mention the status command, got %q", got)

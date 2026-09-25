@@ -5,13 +5,99 @@ import (
 	"fmt"
 	"os"
 	"sort"
+	"strings"
 	"time"
+	"unicode"
 
 	"chronly/backend/storage"
 	"chronly/backend/tracker"
 
 	"github.com/mattn/go-isatty"
 )
+
+var appNameOverrides = map[string]string{
+	"dev.zed.zed":             "Zed",
+	"zed":                     "Zed",
+	"code":                    "VS Code",
+	"code-oss":                "VS Code Insiders",
+	"codium":                  "VSCodium",
+	"kitty":                   "Kitty",
+	"alacritty":               "Alacritty",
+	"org.wezfurlong.wezterm":  "WezTerm",
+	"com.mitchellh.ghostty":   "Ghostty",
+	"org.kde.konsole":         "Konsole",
+	"org.gnome.console":       "Console",
+	"foot":                    "Foot",
+	"firefox":                 "Firefox",
+	"firefoxdeveloperedition": "Firefox Developer Edition",
+	"org.mozilla.firefox":     "Firefox",
+	"librewolf":               "LibreWolf",
+	"chromium":                "Chromium",
+	"google-chrome":           "Chrome",
+	"brave-browser":           "Brave",
+	"org.gnome.nautilus":      "Files",
+	"org.kde.dolphin":         "Dolphin",
+	"thunar":                  "Thunar",
+	"pcmanfm":                 "PCManFM",
+	"com.spotify.client":      "Spotify",
+	"spotify":                 "Spotify",
+	"discord":                 "Discord",
+	"com.discordapp.discord":  "Discord",
+	"org.telegram.desktop":    "Telegram",
+	"telegram-desktop":        "Telegram",
+	"slack":                   "Slack",
+	"com.slack.slack":         "Slack",
+	"org.kde.kate":            "Kate",
+	"org.gnome.texteditor":    "Text Editor",
+	"steam":                   "Steam",
+	"obsidian":                "Obsidian",
+	"md.obsidian.obsidian":    "Obsidian",
+	"org.gimp.gimp":           "GIMP",
+	"org.inkscape.inkscape":   "Inkscape",
+	"vlc":                     "VLC",
+	"org.videolan.vlc":        "VLC",
+	"mpv":                     "mpv",
+	"com.obsproject.studio":   "OBS Studio",
+	"com.gabm.satty":          "Satty",
+	"thunderbird":             "Thunderbird",
+	"org.mozilla.thunderbird": "Thunderbird",
+	"hyprland-share-picker":   "Screen Share Picker",
+}
+
+func titleCaseWords(s string) string {
+	s = strings.NewReplacer("-", " ", "_", " ").Replace(s)
+	words := strings.Fields(s)
+	for i, w := range words {
+		r := []rune(w)
+		if len(r) > 0 {
+			r[0] = unicode.ToUpper(r[0])
+		}
+		words[i] = string(r)
+	}
+	return strings.Join(words, " ")
+}
+
+func titleCaseFromSegment(raw string) string {
+	segment := raw
+	if idx := strings.LastIndex(raw, "."); idx != -1 {
+		segment = raw[idx+1:]
+	}
+	cleaned := titleCaseWords(segment)
+	if cleaned == "" {
+		return raw
+	}
+	return cleaned
+}
+
+func prettyAppName(raw string) string {
+	if raw == "" {
+		return ""
+	}
+	if v, ok := appNameOverrides[strings.ToLower(raw)]; ok {
+		return v
+	}
+	return titleCaseFromSegment(raw)
+}
 
 const liveStatusStaleAfter = 10 * time.Second
 
@@ -137,6 +223,11 @@ func runStatusCommand(args []string) int {
 
 	out := buildStatusOutput(status, now.UTC())
 	out.TopAppsToday = topAppsFromBlocks(todayBlocks, 3)
+
+	out.AppName = prettyAppName(out.AppName)
+	for i := range out.TopAppsToday {
+		out.TopAppsToday[i].AppName = prettyAppName(out.TopAppsToday[i].AppName)
+	}
 
 	if !forceJSON && isatty.IsTerminal(os.Stdout.Fd()) {
 		fmt.Print(humanStatus(out))
