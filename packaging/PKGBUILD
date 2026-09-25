@@ -6,7 +6,7 @@ _tag=v0.1.2-alpha
 pkgdesc="Automatic desktop time tracker for Hyprland — watches your active window, builds a Today dashboard, timeline, and per-project estimate-vs-actual, no manual timers"
 arch=('x86_64')
 url="https://github.com/skipy-force/chronly"
-license=('LicenseRef-All-Rights-Reserved')
+license=('MIT')
 depends=('webkit2gtk-4.1' 'gtk3')
 optdepends=('hyprland: required at runtime, window tracking talks to its IPC socket directly'
             'matugen: live theme re-coloring from your wallpaper')
