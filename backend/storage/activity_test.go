@@ -53,7 +53,7 @@ func TestSaveActivityBlock_PersistsFields(t *testing.T) {
 		t.Fatalf("query back: %v", err)
 	}
 	if gotApp != "code" || gotTask != 10 {
-		t.Fatalf("unexpected row: app=%s task=%d", gotApp, gotTask)
+		t.Fatalf("OH! unexpected row: app=%s task=%d", gotApp, gotTask)
 	}
 }
 
